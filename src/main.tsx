@@ -24,6 +24,7 @@ import { change, listings, money, sectors, type Listing } from "./data";
 import { useWatchlist } from "./useWatchlist";
 import { StockChart } from "./StockChart";
 import { SentimentPanel } from "./SentimentPanel";
+import { AgentChat } from "./AgentChat";
 import "./macos-design-system.css";
 import "./styles.css";
 function Price({
@@ -444,6 +445,11 @@ function App() {
                 <SentimentPanel
                   key={selected.id}
                   listingId={selected.id}
+                  today="2026-10-30"
+                />
+                <AgentChat
+                  key={selected.id}
+                  listing={selected}
                   today="2026-10-30"
                 />
                 <div className="section-top evidence-heading">

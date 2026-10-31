@@ -1902,3 +1902,28 @@ dd {
 .sentiment-empty .secondary-button { display:inline-flex; align-items:center; gap:6px; transition:transform var(--macos-duration-fast) var(--macos-ease-spring); }
 .sentiment-empty .secondary-button:active { transform:scale(.96); }
 @media(max-width:640px) { .sentiment-panel { padding:16px; } .sentiment-banner { border-radius:var(--macos-radius-outer); } }
+
+/* REQ-12 agent chat preview — macOS light acrylic */
+.agent-chat { margin:24px 0; padding:24px; border-radius:var(--macos-radius-frame); background:var(--macos-surface-acrylic); backdrop-filter:var(--macos-blur-dock); -webkit-backdrop-filter:var(--macos-blur-dock); border:1px solid var(--macos-border-subtle); box-shadow:var(--macos-shadow-card), var(--macos-inner-glow); min-width:0; }
+.agent-clear { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:var(--macos-radius-pill); border:1px solid var(--macos-border-subtle); background:var(--macos-surface-card); color:var(--macos-text-secondary); font-size:12px; cursor:pointer; transition:transform var(--macos-duration-fast) var(--macos-ease-spring), background var(--macos-duration-fast); }
+.agent-clear:hover:not(:disabled) { background:var(--macos-surface-hover); }
+.agent-clear:active:not(:disabled), .agent-chip:active, .agent-composer button:active:not(:disabled) { transform:scale(.96); }
+.agent-clear:disabled { opacity:.45; cursor:default; }
+.agent-log { list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.agent-q { justify-self:end; margin:0 0 8px auto; width:fit-content; max-width:80%; padding:8px 14px; border-radius:18px 18px 4px 18px; background:var(--macos-accent-blue); color:#fff; font-size:13px; overflow-wrap:anywhere; }
+.agent-a { max-width:92%; padding:12px 14px; border-radius:18px 18px 18px 4px; background:var(--macos-surface-card); border:1px solid var(--macos-border-subtle); box-shadow:var(--macos-inner-glow); font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
+.agent-a p { margin:6px 0; }
+.agent-a.refusal { border-color:rgba(255,149,0,.35); background:rgba(255,149,0,.06); }
+.agent-a.cap, .agent-a.missing { background:var(--macos-surface-track); }
+.agent-badge { display:inline-block; padding:2px 8px; border-radius:var(--macos-radius-pill); background:var(--macos-surface-selected); color:var(--macos-accent-blue); font-size:10px; font-weight:600; letter-spacing:.02em; }
+.agent-cites { margin:6px 0 0; padding-left:16px; font-size:11px; color:var(--macos-text-secondary); display:grid; gap:3px; }
+.agent-cites a { color:var(--macos-accent-blue); display:inline-flex; align-items:center; gap:3px; flex-wrap:wrap; }
+.agent-chips { display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 12px; }
+.agent-chip { padding:6px 12px; border-radius:var(--macos-radius-pill); border:1px solid var(--macos-border-subtle); background:var(--macos-surface-card); box-shadow:var(--macos-inner-glow); font-size:12px; color:var(--macos-text-primary); cursor:pointer; transition:transform var(--macos-duration-fast) var(--macos-ease-spring), background var(--macos-duration-fast); }
+.agent-chip:hover { background:var(--macos-surface-hover); }
+.agent-composer { display:flex; gap:8px; align-items:center; margin-top:14px; padding:6px 6px 6px 16px; border-radius:var(--macos-radius-pill); background:var(--macos-surface-card); border:1px solid var(--macos-border-subtle); box-shadow:var(--macos-shadow-composer); transition:box-shadow var(--macos-duration-normal) var(--macos-ease-spring); }
+.agent-composer:focus-within { box-shadow:var(--macos-shadow-composer-focus); }
+.agent-composer input { flex:1; min-width:0; border:0; outline:0; background:transparent; font:inherit; font-size:13px; color:var(--macos-text-primary); }
+.agent-composer button { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:50%; background:var(--macos-accent-blue); color:#fff; cursor:pointer; transition:transform var(--macos-duration-fast) var(--macos-ease-spring), opacity var(--macos-duration-fast); }
+.agent-composer button:disabled { opacity:.35; cursor:default; }
+@media(max-width:640px) { .agent-chat { padding:16px; } .agent-a { max-width:100%; } }
