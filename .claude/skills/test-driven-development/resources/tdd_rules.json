@@ -1,0 +1,50 @@
+{
+  "name": "test-driven-development-rules",
+  "version": "1.0.0",
+  "description": "Standardized configuration rules for test discovery, failure triage, and contract verification.",
+  "discovery": {
+    "test_directories": ["tests", "__tests__", "spec"],
+    "file_patterns": {
+      "python": ["test_*.py", "*_test.py"],
+      "typescript": ["*.spec.ts", "*.test.ts"],
+      "javascript": ["*.spec.js", "*.test.js"],
+      "rust": ["*.rs"],
+      "go": ["*_test.go"]
+    }
+  },
+  "frameworks": {
+    "python": {
+      "default_runner": "uv run pytest -v",
+      "fallback_runner": "python -m unittest discover -s tests",
+      "error_patterns": {
+        "missing_module": "ModuleNotFoundError",
+        "missing_attribute": "AttributeError",
+        "assertion_failure": "AssertionError",
+        "type_mismatch": "TypeError"
+      }
+    },
+    "typescript": {
+      "default_runner": "npm test",
+      "focused_runner": "npx vitest run {file}",
+      "error_patterns": {
+        "missing_module": "Cannot find module",
+        "assertion_failure": "AssertionError",
+        "type_error": "TS2304"
+      }
+    },
+    "rust": {
+      "default_runner": "cargo test",
+      "focused_runner": "cargo test --test {target}"
+    },
+    "go": {
+      "default_runner": "go test ./...",
+      "focused_runner": "go test -v ./tests/... -run {test_name}"
+    }
+  },
+  "invariants": [
+    "Never modify test assertions to force a test pass.",
+    "Always run tests to confirm the Red baseline before implementing production code.",
+    "Implement minimal, clean code satisfying exact test contracts.",
+    "Ensure all tests pass with Exit Code 0 before completing tasks."
+  ]
+}
