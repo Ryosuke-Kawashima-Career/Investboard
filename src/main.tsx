@@ -25,6 +25,8 @@ import { useWatchlist } from "./useWatchlist";
 import { StockChart } from "./StockChart";
 import { SentimentPanel } from "./SentimentPanel";
 import { AgentChat } from "./AgentChat";
+import { syntheticSentiment } from "./sentiment";
+import { demoAgentContext } from "./agent";
 import "./macos-design-system.css";
 import "./styles.css";
 function Price({
@@ -444,13 +446,13 @@ function App() {
                 </section>
                 <SentimentPanel
                   key={selected.id}
-                  listingId={selected.id}
+                  bundle={syntheticSentiment(selected.id, "2026-10-30")}
                   today="2026-10-30"
                 />
                 <AgentChat
                   key={selected.id}
-                  listing={selected}
-                  today="2026-10-30"
+                  ctx={demoAgentContext(selected, "2026-10-30")}
+                  symbol={selected.symbol}
                 />
                 <div className="section-top evidence-heading">
                   <div>

@@ -5,7 +5,11 @@ import { summarizePeriod } from "./chart-data";
 import { StockChart, describeChange } from "./StockChart";
 import { useWatchlist } from "./useWatchlist";
 import { SentimentPanel } from "./SentimentPanel";
+import { AgentChat } from "./AgentChat";
+import { realAgentContext } from "./agent";
+import { TONE_THRESHOLD, evaluateTone, headlineToneBundle } from "./tone";
 import {
+  loadCompany,
   loadResearch,
   rangeStart,
   signalSummary,
@@ -141,7 +145,34 @@ export default function RealApp() {
     return () => controller.abort();
   }, [revision]);
   const listings = result?.data || [],
-    listing = listings.find((l) => l.id === selected);
+    picked = listings.find((l) => l.id === selected);
+  // The list API sends compact summaries; the company page loads the full
+  // listing (all history and evidence). Fixture payloads without the marker
+  // are already complete. Spec 1.8.0.
+  const [full, setFull] = useState<{
+    id: string;
+    data: RealListing | null;
+    error: boolean;
+  } | null>(null);
+  const [detailRevision, setDetailRevision] = useState(0);
+  const needsDetail = picked?.detail === "summary";
+  useEffect(() => {
+    if (!picked || !needsDetail) return;
+    const controller = new AbortController();
+    setFull({ id: picked.id, data: null, error: false });
+    loadCompany(picked.companyId, controller.signal)
+      .then((data) => setFull({ id: picked.id, data, error: false }))
+      .catch(() => {
+        if (!controller.signal.aborted)
+          setFull({ id: picked.id, data: null, error: true });
+      });
+    return () => controller.abort();
+  }, [picked?.id, needsDetail, detailRevision]);
+  const listing = needsDetail
+    ? full?.id === picked!.id
+      ? full.data
+      : null
+    : picked;
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
     year: "numeric",
@@ -222,7 +253,7 @@ export default function RealApp() {
         <div className="workspace">
           <header className="topbar">
             <div className="breadcrumb">
-              Workspace / {listing?.symbol || view}
+              Workspace / {picked?.symbol || view}
             </div>
             <div className="search-box">
               <Search size={17} />
@@ -306,7 +337,36 @@ export default function RealApp() {
                   : "No stored price observations are available."}
               </p>
             )}
-            {listing ? (
+            {picked && !listing ? (
+              <section
+                className="chart-panel detail-loading"
+                aria-live="polite"
+              >
+                <button
+                  className="text-button"
+                  onClick={() => setSelected(null)}
+                >
+                  <ArrowLeft size={16} /> Back to companies
+                </button>
+                <h1>{picked.name}</h1>
+                {full?.error ? (
+                  <>
+                    <p>
+                      Full history and headlines could not be loaded. Nothing is
+                      shown in their place.
+                    </p>
+                    <button
+                      className="secondary-button"
+                      onClick={() => setDetailRevision((n) => n + 1)}
+                    >
+                      Retry
+                    </button>
+                  </>
+                ) : (
+                  <p>Loading full history and headlines…</p>
+                )}
+              </section>
+            ) : listing ? (
               <>
                 <button
                   className="text-button"
@@ -389,9 +449,18 @@ export default function RealApp() {
                 </section>
                 <SentimentPanel
                   key={listing.id}
-                  listingId={listing.id}
+                  bundle={headlineToneBundle(
+                    listing.evidence,
+                    listing.newsRetrievedAt,
+                  )}
                   today={today}
-                  real
+                  evaluation={evaluateTone()}
+                  threshold={TONE_THRESHOLD}
+                />
+                <AgentChat
+                  key={`agent-${listing.id}`}
+                  ctx={realAgentContext(listing, today)}
+                  symbol={listing.symbol}
                 />
                 <section className="chart-panel">
                   <h2>Original disclosures</h2>
@@ -472,7 +541,7 @@ export default function RealApp() {
                   <div className="filter-row">
                     {[
                       "All sectors",
-                      ...new Set(listings.map((l) => l.sector)),
+                      ...[...new Set(listings.map((l) => l.sector))].sort(),
                     ].map((s) => (
                       <button
                         className="filter-chip"

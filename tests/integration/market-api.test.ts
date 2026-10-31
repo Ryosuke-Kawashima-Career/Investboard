@@ -58,7 +58,9 @@ it("refreshes the whole universe with news, then serves search, sectors and disc
   const all = read("/api/companies").body;
   expect(all.data).toHaveLength(UNIVERSE.length);
   expect(all.meta.coverage.listings).toBe(UNIVERSE.length);
-  expect(read("/api/companies?sector=Banking").body.data).toHaveLength(2);
+  expect(read("/api/companies?sector=Banking").body.data).toHaveLength(
+    UNIVERSE.filter((l) => l.sector === "Banking").length,
+  );
   expect(read("/api/companies?q=airtel").body.data[0].symbol).toBe(
     "BHARTIARTL",
   );

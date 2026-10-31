@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.6.0"
+version: "1.8.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -92,6 +92,8 @@ Measure task success during usability review: can a participant find a company, 
 | 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
 | 1.5.0 | 2026-10-31 | Phase 3 price-change readability: period summary, cursor delta, high/low markers, 1Y line default, observed sparklines | User chart-readability request | In Progress |
 | 1.6.0 | 2026-10-31 | Added REQ-11 social attention/sentiment and REQ-12 research agent with trust, permission and evaluation gates | User trust and sentiment-analysis request | In Progress |
+| 1.7.0 | 2026-10-31 | Real-data MVP: Google News headline tone added as a REQ-11 source (already permitted), provisional news minimum sample, in-app labeled evaluation; rule-based REQ-12 agent over real stored data | User real-data MVP request (chose headline tone and a scripted agent) | In Progress |
+| 1.8.0 | 2026-10-31 | Universe expanded from 10 to 50 NSE large caps; request budget sized for one full refresh; compact list API with per-company detail to keep the 3-second target | User request for more companies to research | In Progress |
 
 ## Replacement backend contract · 1.3.0
 
@@ -142,3 +144,24 @@ Agent contract: tools are fixed and read-only (quote, history, evidence, signals
 | Agent with free web browsing | Untraceable claims and prompt-injection exposure |
 
 Resolve before live integration: per-source access, cost, storage and display rights; sentiment classifier choice and enabling threshold; minimum-sample values; agent model provider and cost caps. Resolve before public launch: qualified review of whether sentiment summaries and an agent answering stock questions fall under applicable Indian investment-advice or research-analyst obligations, and approved wording. No legal conclusion is asserted here. Verification: labeled-set evaluation report, guardrail tests (advice refusal, injection, missing data), source-permission audit, mobile and desktop journeys, and the 3-second target for cached views.
+
+## Real-data sentiment and agent MVP · 1.7.0
+
+Chosen by the user on 2026-10-31: the first live REQ-11 source is the tone of Google News headlines already acquired under the Phase 2 terms (personal non-commercial use). This adds no new requests, credentials or stored text. It is labeled "news headline tone": what headlines say about the company, not public or social sentiment. X, Reddit and Google Trends stay "Source unavailable" until the permission gate approves them.
+
+Classifier `headline-lexicon-v1`: deterministic English word lists for gains and losses in company, financial and regulatory terms. A headline with both kinds of terms is mixed; one with neither is neutral; a headline mostly in non-Latin script is unclassifiable. Evaluation: `dev/data/headline-tone-eval.json`, 100 stored real headlines (10 per listing) labeled positive/negative/neutral/mixed/unclassifiable. Off-topic name matches (e.g. GST "ITC", ITC Hotels) are labeled unclassifiable. The app computes accuracy and the confusion matrix from this file and publishes both. Labels were assigned by the AI assistant and the word lists were written after viewing these headlines, so accuracy is in-sample and optimistic until the user reviews the labels and a held-out set is added. Provisional enabling threshold: 60% overall accuracy; below it, tone is withheld.
+
+Provisional news minimum sample per source-period: 10 headlines from 5 publishers (headlines are fewer than posts; at most about 20 are stored per listing per refresh). Publisher concentration and one-day spike flags apply; for news, a spike often means a results day, and the flag text says so.
+
+REQ-12 MVP: the agent is rule-based, not a model. It answers price, tone and headline questions from the real stored data shown on the page. It labels answers "Rule-based answer", keeps the advice/forecast refusal, the session question cap and clear, and has no web access. A model-backed agent remains TASK-14.
+
+## Expanded universe · 1.8.0
+
+Goal: give users a broader set of well-known Indian companies to research. The app still ranks nothing by expected return and gives no advice; "worth researching" means a company has a discovery signal with visible evidence.
+
+Universe: 50 NSE large caps across banking, financial services, insurance, IT, consumer goods, automobiles, metals, energy, power, cement, pharmaceuticals, healthcare, infrastructure, capital goods, telecom and retail. It is broadly modeled on the Nifty 50 as known at authoring, but it is not presented as the current index list. Excluded: Mahindra & Mahindra (its "&" provider symbol needs path-encoding work) and Tata Motors (demerged; its listing identity needs separate verification). Each listing keeps the existing identity check against Yahoo's symbol, exchange, currency, timezone and exact company name. A listing that fails it shows as unverified and is reported individually; it is never relabeled.
+
+Requests: one chart and one news request per listing per refresh, making 100 per full refresh. Default persisted budget 220 per rolling day (one full refresh plus retries and one operator refresh), hard cap 250. The refresh schedule, pause, cooldowns and allowlist are unchanged, and the allowlist now includes the 50 chart symbols.
+
+Payload: `/api/companies` returns compact summaries (identity, quote, signals, last calendar month of OHLC for sparklines, no evidence, `detail: "summary"`). `/api/companies/{companyId}` returns the full listing with history and evidence, loaded when a company page opens. If that load fails, the page says so with a retry and never shows the summary's one-month history as the full range. Verification: unit and integration tests for universe size and uniqueness, the budget and the summary/detail split; a browser journey for the detail load; one real acquisition; and the 3-second cached-view target.
+

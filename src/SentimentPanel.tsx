@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   FlaskConical,
   MessagesSquare,
+  Newspaper,
   TrendingUp,
 } from "lucide-react";
 import {
@@ -10,15 +11,16 @@ import {
   MIN_AUTHORS,
   MIN_ITEMS,
   aggregateSentiment,
-  syntheticSentiment,
   type SentimentAggregate,
   type SentimentBundle,
 } from "./sentiment";
+import type { ToneEvaluation } from "./tone";
 
 const flagText = {
   "author-concentration":
-    "One author posted over 25% of items — possible manipulation",
-  "volume-spike": "Unusual one-day volume spike — possible manipulation",
+    "One author or publisher supplied over 25% of items — check for one-sided or coordinated coverage",
+  "volume-spike":
+    "Unusual one-day spike — can mean a results day or coordinated posting",
 };
 
 function LabelBar({ agg }: { agg: SentimentAggregate }) {
@@ -73,21 +75,25 @@ function SourceCard({
         <p className="small muted">{source.reason}. Not counted as neutral.</p>
       </article>
     );
-  const agg = aggregateSentiment(source.items, days, today);
+  const min = source.minSample ?? { items: MIN_ITEMS, authors: MIN_AUTHORS };
+  const [item, author] = bundle.synthetic
+    ? ["items", "authors"]
+    : ["headlines", "publishers"];
+  const agg = aggregateSentiment(source.items, days, today, min);
   const change = agg.positiveShareChange;
   return (
     <article className="sentiment-source">
       <h3>{source.name}</h3>
       <p className="small muted">
-        {agg.from} – {agg.to} · {agg.retrieved} items from {agg.authors} authors
-        · {agg.duplicatesRemoved} reposts removed
+        {agg.from} – {agg.to} · {agg.retrieved} {item} from {agg.authors}{" "}
+        {author} · {agg.duplicatesRemoved} duplicates removed
       </p>
       {agg.status === "insufficient" ? (
         <p className="sentiment-state">
           Not enough data
           <span className="small muted">
             {" "}
-            · needs {MIN_ITEMS} items from {MIN_AUTHORS} authors
+            · needs {min.items} {item} from {min.authors} {author}
           </span>
         </p>
       ) : (
@@ -113,17 +119,20 @@ function SourceCard({
       ))}
       {agg.cited.length > 0 && (
         <details className="sentiment-cited">
-          <summary>Cited posts ({agg.cited.length})</summary>
+          <summary>
+            Cited {bundle.synthetic ? "posts" : "headlines"} ({agg.cited.length}
+            )
+          </summary>
           <ul>
             {agg.cited.map((c) => (
               <li key={c.id}>
                 <span className={`dot ${c.label}`} /> {c.text}{" "}
                 <span className="small muted">
-                  · {c.date} · {c.label}
+                  · {c.author} · {c.date} · {c.label}
                   {c.url.startsWith("https://") ? (
-                    <a href={c.url} target="_blank" rel="noreferrer">
+                    <a href={c.url} target="_blank" rel="noopener noreferrer">
                       {" "}
-                      open
+                      open ↗
                     </a>
                   ) : (
                     " · synthetic, no link"
@@ -139,8 +148,12 @@ function SourceCard({
   );
 }
 
-function TrendsCard({ bundle }: { bundle: SentimentBundle }) {
-  const pts = bundle.trends.points;
+function TrendsCard({
+  trends,
+}: {
+  trends: NonNullable<SentimentBundle["trends"]>;
+}) {
+  const pts = trends.points;
   const w = 300,
     h = 56;
   const line = pts
@@ -149,7 +162,7 @@ function TrendsCard({ bundle }: { bundle: SentimentBundle }) {
   return (
     <article className="sentiment-source">
       <h3>
-        <TrendingUp size={15} /> {bundle.trends.name}
+        <TrendingUp size={15} /> {trends.name}
       </h3>
       <p className="small muted">
         Relative search interest (0–100), last 90 days — attention, not
@@ -173,33 +186,77 @@ function TrendsCard({ bundle }: { bundle: SentimentBundle }) {
   );
 }
 
+function EvaluationDetails({ evaluation }: { evaluation: ToneEvaluation }) {
+  return (
+    <details className="sentiment-eval">
+      <summary>
+        How accurate is this? {(evaluation.accuracy * 100).toFixed(0)}% on{" "}
+        {evaluation.n} labeled headlines
+      </summary>
+      <p className="small muted">
+        Labels were assigned by the AI assistant and the word lists were written
+        after viewing these headlines, so this is in-sample and optimistic. Rows
+        are the assigned label; columns are the classifier's output.
+      </p>
+      <div className="eval-scroll">
+        <table className="eval-matrix">
+          <thead>
+            <tr>
+              <th scope="col">Labeled \ Classified</th>
+              {LABELS.map((l) => (
+                <th scope="col" key={l}>
+                  {l}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {LABELS.map((a) => (
+              <tr key={a}>
+                <th scope="row">{a}</th>
+                {LABELS.map((p) => (
+                  <td key={p} className={a === p ? "diag" : ""}>
+                    {evaluation.matrix[a][p]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  );
+}
+
 export function SentimentPanel({
-  listingId,
+  bundle,
   today,
-  real = false,
+  evaluation,
+  threshold = 0,
 }: {
-  listingId: string;
+  bundle: SentimentBundle;
   today: string;
-  real?: boolean;
+  evaluation?: ToneEvaluation;
+  threshold?: number;
 }) {
   const [days, setDays] = useState(7);
-  // Real mode never shows fixtures: no social source has passed TASK-12.
-  const preview = !real;
-  const bundle = useMemo(
-    () => syntheticSentiment(listingId, today),
-    [listingId, today],
-  );
+  const real = !bundle.synthetic;
+  const accuracy = bundle.classifier.accuracy;
+  const withheld = real && (accuracy == null || accuracy < threshold);
   return (
     <section className="sentiment-panel" aria-labelledby="sentiment-title">
       <div className="sentiment-head">
         <div>
           <div className="eyebrow">
-            <MessagesSquare size={12} /> SOCIAL ATTENTION & SENTIMENT
+            {real ? <Newspaper size={12} /> : <MessagesSquare size={12} />}{" "}
+            {real ? "NEWS HEADLINE TONE" : "SOCIAL ATTENTION & SENTIMENT"}
           </div>
-          <h2 id="sentiment-title">What people are saying</h2>
+          <h2 id="sentiment-title">
+            {real ? "What headlines say" : "What people are saying"}
+          </h2>
         </div>
-        {preview && (
-          <div className="macos-segmented-track" aria-label="Sentiment period">
+        {!withheld && (
+          <div className="macos-segmented-track" aria-label="Tone period">
             {[7, 30].map((d) => (
               <button
                 key={d}
@@ -213,41 +270,48 @@ export function SentimentPanel({
           </div>
         )}
       </div>
-      {!preview ? (
+      {real ? (
+        <p className="sentiment-banner real">
+          <Newspaper size={14} /> Tone of company-matched Google News headlines,
+          classified by word lists. It describes headlines, not public opinion,
+          is not a forecast, and never affects discovery ranking.
+        </p>
+      ) : (
+        <p className="sentiment-banner">
+          <FlaskConical size={14} /> Synthetic fixture — invented posts and
+          counts for interface review. Not real sentiment, not a forecast, and
+          never used in discovery ranking.
+        </p>
+      )}
+      {withheld ? (
         <div className="sentiment-empty">
           <p>
-            <strong>Unavailable.</strong> No social source has passed the
-            permission review yet, so no real sentiment is shown.
+            <strong>Withheld.</strong> The classifier is below the agreed
+            accuracy threshold.
           </p>
         </div>
       ) : (
-        <>
-          <p className="sentiment-banner">
-            <FlaskConical size={14} /> Synthetic fixture — invented posts and
-            counts for interface review. Not real sentiment, not a forecast, and
-            never used in discovery ranking.
-          </p>
-          <div className="sentiment-grid">
-            {bundle.sources.map((_, i) => (
-              <SourceCard
-                key={i}
-                bundle={bundle}
-                index={i}
-                days={days}
-                today={today}
-              />
-            ))}
-            <TrendsCard bundle={bundle} />
-          </div>
-          <p className="small muted">
-            Classifier {bundle.classifier.name} {bundle.classifier.version} ·
-            Accuracy:{" "}
-            {bundle.classifier.accuracy == null
-              ? "not yet measured on the labeled evaluation set"
-              : `${bundle.classifier.accuracy}%`}
-          </p>
-        </>
+        <div className="sentiment-grid">
+          {bundle.sources.map((_, i) => (
+            <SourceCard
+              key={i}
+              bundle={bundle}
+              index={i}
+              days={days}
+              today={today}
+            />
+          ))}
+          {bundle.trends && <TrendsCard trends={bundle.trends} />}
+        </div>
       )}
+      <p className="small muted">
+        Classifier {bundle.classifier.name} {bundle.classifier.version} ·
+        Accuracy:{" "}
+        {accuracy == null
+          ? "not yet measured on the labeled evaluation set"
+          : `${(accuracy * 100).toFixed(0)}% (in-sample)`}
+      </p>
+      {evaluation && <EvaluationDetails evaluation={evaluation} />}
     </section>
   );
 }

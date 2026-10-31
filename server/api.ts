@@ -168,21 +168,28 @@ export function route(
       mode: "real",
       acquisition: "api",
     });
-  // The list carries listing-level currency/source/basis, so points stay compact;
-  // the per-listing history route returns full points.
-  if (path === "/api/companies")
+  // The list is a compact summary (last calendar month for sparklines, no
+  // evidence) so 50 listings stay within the cached-view target; the company
+  // route returns the full listing. Spec 1.8.0.
+  if (path === "/api/companies") {
+    const since = calendarFrom(indiaDate(now), "1M");
     return page(
       matching.map((l) => ({
         ...l,
-        history: l.history.map(({ date, open, high, low, close }) => ({
-          date,
-          open,
-          high,
-          low,
-          close,
-        })),
+        detail: "summary",
+        evidence: [],
+        history: l.history
+          .filter((p) => p.date >= since)
+          .map(({ date, open, high, low, close }) => ({
+            date,
+            open,
+            high,
+            low,
+            close,
+          })),
       })),
     );
+  }
   if (path === "/api/discovery") {
     const version = q.get("signal") ?? SIGNAL_VERSIONS[0];
     if (!SIGNAL_VERSIONS.includes(version)) return invalid("INVALID_SIGNAL");
@@ -193,7 +200,9 @@ export function route(
       }),
     );
   }
-  const company = path.match(/^\/api\/companies\/([a-z0-9-]{1,40})(\/evidence)?$/);
+  const company = path.match(
+    /^\/api\/companies\/([a-z0-9-]{1,40})(\/evidence)?$/,
+  );
   if (company) {
     const listing = s.data.find((l) => l.companyId === company[1]);
     if (!listing) return unsupported;

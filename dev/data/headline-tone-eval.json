@@ -1,0 +1,506 @@
+{
+  "description": "Headline tone evaluation set: 100 stored Google News headlines (first 10 per listing, retrieved 2026-10-31). Labels assigned by the AI assistant; pending user review. Off-topic name matches are unclassifiable.",
+  "labeledBy": "AI assistant (Claude), 2026-10-31; not yet reviewed by the user",
+  "items": [
+    {
+      "company": "reliance",
+      "title": "Reliance Industries Q2 net rises 34% to Rs 29,550 crore",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Oil-to-chemicals business powers Reliance Industries' record quarterly net profit, up 34% to ₹29,550 crore",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Reliance Industries Q2 profit jumps 33.8 per cent to record Rs 29,550 crore",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Financial and Operational Performance of Reliance Industries Limited (RIL) for the Quarter and Half Year ended 30th September 202.",
+      "label": "neutral"
+    },
+    {
+      "company": "reliance",
+      "title": "Reliance PAT jumps 33% to Rs 29,550 crore in Q2 on strong telecom, petrochemicals growth",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Ambani's Reliance set for profit jump on refining, Jio boost",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Reliance Industries Q2 results: Profit may top Rs 21,000 crore as refining, Jio drive earnings",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Reliance Industries to raise up to Rs 15,000 crore via NCDs",
+      "label": "neutral"
+    },
+    {
+      "company": "reliance",
+      "title": "Ambani-owned Reliance's profit jumps 41% on refining, Jio strength",
+      "label": "positive"
+    },
+    {
+      "company": "reliance",
+      "title": "Reliance Industries Q2 results 2026 today: Preview, should you buy, sell or hold ahead of earnings? Experts' views",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "TCS at ABSL Forum 2026: Building autonomous operations at scale",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "TCS-partnered marathons generate US$3.2 billion for host cities and raise US$315 million for charity, according to Brand Finance",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services Limited (TCS.NS) Seasonal Returns Chart - Yahoo Finance",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "She left TCS, built Rs 12-crore 'Madras Sarees': How Ramya Devanathan turned her passion for sarees into...",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services - TCS, Vedanta among 10 companies offering dividend yield of up to 7%. Do you own any?",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services (TCS) Share Price Falls 3.14% Today: Price Action and Fundamentals",
+      "label": "negative"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services Limited (TCS.BO) stock price, news, quote and history",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services (NSEI:TCS) Stock Price",
+      "label": "neutral"
+    },
+    {
+      "company": "tcs",
+      "title": "Tata Consultancy Services Stock Update: Shares Slip on Analyst Caution",
+      "label": "negative"
+    },
+    {
+      "company": "tcs",
+      "title": "TCS share price surges 28% in October, hits over 7-month high; here's why",
+      "label": "positive"
+    },
+    {
+      "company": "infosys",
+      "title": "Telangana: Infosys Pocharam campus expands by 11 lakh sq ft, 10K seats",
+      "label": "positive"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys opens 1.1 million sq.ft. new block at Pocharam campus in Hyderabad",
+      "label": "positive"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys sets up new 1.1M sq ft block at Pocharam campus in Hyderabad to cater to emerging technologies",
+      "label": "positive"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys AI Revenue Up 29%",
+      "label": "positive"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys CEO says US immigration constraints won’t raise costs or attrition",
+      "label": "neutral"
+    },
+    {
+      "company": "infosys",
+      "title": "Q2 October dividend champions: Infosys, Colgate, HUL, CPCL, Coal India | Big payouts - amount, record date",
+      "label": "neutral"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys filing to SEC: Facing investigation from Department of Justice on classification of H-1B visa emp",
+      "label": "negative"
+    },
+    {
+      "company": "infosys",
+      "title": "IT Stocks Crash! Nifty IT plunges over 1,000 points; Rs 77,000 crore mcap lost – Why are Infosys, TCS & others falling?",
+      "label": "negative"
+    },
+    {
+      "company": "infosys",
+      "title": "AI slows growth for Infosys and keeps it afloat at the same time",
+      "label": "mixed"
+    },
+    {
+      "company": "infosys",
+      "title": "Infosys, TCS, HCLTech fall up to 5%: Why are IT stocks down today?",
+      "label": "negative"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "HDFC Bank — many questions unanswered",
+      "label": "negative"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "HDFC Bank shares recover from fresh 52-week low as buyers step in",
+      "label": "mixed"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "Anup Bagchi succeeds Sashidhar Jagdishan as HDFC Bank CEO as post-merger profitability comes into focus",
+      "label": "neutral"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "Axis Bank sees highest growth in active debit cards; HDFC Bank leads credit card market",
+      "label": "positive"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "HDFC Bank Limited Stock 12‑Month Price Target Cut to $30.31, Implies 42% Upside",
+      "label": "mixed"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "HDFC Bank Limited Stock 12‑Month Price Target Cut to INR 957.95, Implies 41% Upside",
+      "label": "mixed"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "Anup Bagchi takes charge as HDFC Bank CEO and MD",
+      "label": "neutral"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "HDFC Bank shares steady as Bagchi takes charge as MD & CEO",
+      "label": "neutral"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "Sashidhar Jagdishan’s undoing at HDFC Bank",
+      "label": "negative"
+    },
+    {
+      "company": "hdfc-bank",
+      "title": "Anup Bagchi assumes charge at HDFC Bank, faces many challenges",
+      "label": "negative"
+    },
+    {
+      "company": "icici-bank",
+      "title": "Bank holiday today 31 Oct 2026: Are banks open today? Check if SBI, HDFC, ICICI Bank and others are open in your city",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "US midterms may raise shutdown, debt risks; keep tariff uncertainty high: ICICI Bank",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "ICICI Bank Limited (ICICIBANK.NS) stock price, news, quote and history",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "Foreign Investors Own Half Of HDFC Bank and ICICI Bank. An LTCG Cut Could Matter Most Here",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "ICICI Bank hikes FD rates: Check revised interest rates for senior citizens, general depositors",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "ICICI Bank (NYSE:IBN) Stock Breaks Above 50-Day Moving Average - Here's Why",
+      "label": "positive"
+    },
+    {
+      "company": "icici-bank",
+      "title": "ICICI Bank Allots 1.09 Lakh Shares under ESOP Scheme",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "ICICI Bank raises FD rates under ₹3Cr, seniors hit 7.20%",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "How to Add Money to US Stocks on Groww with ICICI Bank: A Step-by-Step Guide",
+      "label": "neutral"
+    },
+    {
+      "company": "icici-bank",
+      "title": "Buy, Sell Or Hold: ICICI Bank, Hyundai Motor, Trent, Tata Steel, Schaeffler India And L&T Finance — Ask Profit",
+      "label": "neutral"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Buy Hindustan Unilever Ltd for the Target Rs 2,268 by Prabhudas Liladhar Ltd",
+      "label": "positive"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Hindustan Unilever Ltd (BOM:500696) (Q2 2027) Earnings Call Highlights: 15% Sales Growth, ...",
+      "label": "positive"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Hindustan Unilever to participate in Unilever Capital Markets Day 2026",
+      "label": "neutral"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "How Is Hindustan Unilever (NSE:HINDUNILVR) Translating Volume Recovery into FY27 Earnings?",
+      "label": "neutral"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Hindustan Unilever Posts Resilient Q2 Demand, Brokerages Hike Targets Amid Inflation",
+      "label": "positive"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Hindustan Unilever backs FSSAI’s proposed front-of-pack nutrition labelling norms",
+      "label": "neutral"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Amid near-term headwinds, Street is bullish on Hindustan Unilever",
+      "label": "mixed"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Will Hindustan Unilever consider a share buyback after 15 years? Here's what the management said",
+      "label": "neutral"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "HUL Q2 results: Net profit rises 6%, beats estimates; company declares Rs 19 dividend",
+      "label": "positive"
+    },
+    {
+      "company": "hindustan-unilever",
+      "title": "Hindustan Unilever Q2 profit rises 6% on strong demand offsets rising costs",
+      "label": "positive"
+    },
+    {
+      "company": "itc",
+      "title": "GST New Update: Capital Goods ITC Refund Over 60 Months",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "itc",
+      "title": "ITC Hotels signs 105-key Fortune Select Greater Noida",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "itc",
+      "title": "ITC Hotels expands presence in NCR; signs 105-key Fortune Select Greater Noida",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "itc",
+      "title": "ITC Hotels expands presence in NCR",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "itc",
+      "title": "ITC Limited (ITC.NS) Seasonal returns chart",
+      "label": "neutral"
+    },
+    {
+      "company": "itc",
+      "title": "Trick, Treat or Business Opportunity? How ITC's Candyman Is Betting on India's Halloween Craze",
+      "label": "neutral"
+    },
+    {
+      "company": "itc",
+      "title": "ITC shares trade near 52-week low ahead of Q2 earnings; net profit, revenue expectations and more",
+      "label": "negative"
+    },
+    {
+      "company": "itc",
+      "title": "337 ITC Case on Behalf of U.S. Shrimpers",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "itc",
+      "title": "ITC Wants Aashirvaad To Be More Than Atta In Your Kitchen",
+      "label": "neutral"
+    },
+    {
+      "company": "itc",
+      "title": "CBIC Clarifies ITC on Demo Vehicles for Authorised Dealers Under Circular No. 262/08/2026-GST",
+      "label": "unclassifiable"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "TCS, Trent, Bharti Airtel, BSE: 8 NIFTY50 stocks that delivered more than 10% returns in October; check full list",
+      "label": "positive"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Jio adds nearly 10 times more core mobile subscribers than Airtel in September",
+      "label": "negative"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Tinubu Welcomes Airtel Open Network Initiative, Urges Operators To Improve Service Quality",
+      "label": "mixed"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Tinubu Welcomes Airtel’s 5G Expansion, Seeks Wider Network Coverage",
+      "label": "positive"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Tinubu backs Airtel’s open network, demands better services for Nigerian subscribers",
+      "label": "mixed"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Airtel Africa's net profit at $452 million in H1FY27, revenue up by 28% to $3.82 billion",
+      "label": "positive"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Bharti Airtel pays ₹2.14 lakh penalty for verification violations",
+      "label": "negative"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Bharti Airtel receives ₹54.06 lakh TRAI order for TCCCPR non-compliance",
+      "label": "negative"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Telecom news: Bharti Airtel, DoT, Maxis, U Mobile, COAI, TRAI, Indus Towers",
+      "label": "neutral"
+    },
+    {
+      "company": "bharti-airtel",
+      "title": "Delhi HC seeks Centre, BSNL, Airtel responses on postal tender PIL",
+      "label": "neutral"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "Larsen & Toubro Wins Major Dhaka Metro Line 1 Contracts",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "Larsen & Toubro climbs Thursday, underperforms market",
+      "label": "mixed"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "Airtel, ICICI Bank, L&T, Titan, Dee Development among brokerage's top Diwali 2026 picks",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "Larsen & Toubro Q2 net profit up 33% at Rs 5,202 cr",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "REG - Larsen & Toubro Ltd - Half-year Financial Report",
+      "label": "neutral"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "India's L&T jumps as quarterly profit beat eases Middle East concerns",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "Larsen & Toubro Posts Higher Fiscal H1 Attributable Profit; Revenue Up",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "L&T Q2 profit rose 33% to ₹5,202 crore; logs record order inflows of ₹147,665 crore",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "L&T's Buildings & Factories vertical secures large government orders",
+      "label": "positive"
+    },
+    {
+      "company": "larsen-toubro",
+      "title": "L&T share price jumps 6% after strong Q2 results 2026 | Should you buy, sell or hold? Check target, upside",
+      "label": "positive"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma Q2 profit falls 36 pc to Rs 1,989 cr formulations, global innovative sales push revenue",
+      "label": "mixed"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "EXCLUSIVE: India orders Sun Pharma to halt eye-care drug production at plant after quality lapses",
+      "label": "negative"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma Q2 results: Net profit falls 36% to Rs 1,989 cr on one-time hit, revenue up 12%; stock jumps",
+      "label": "mixed"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "India's Sun Pharma posts lower quarterly profit on one-time acquisition-related charge",
+      "label": "negative"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Drug Regulators Order Sun Pharma to Halt Eye-Care Production at Assam Plant Over Quality Lapses",
+      "label": "negative"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma's profit falls on Organon deal charge; specialty drug sales remain strong",
+      "label": "mixed"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma Q2 results: Net profit falls 36% to Rs 1,989 crore, hit by one-time loss; revenue at Rs 16,199 crore",
+      "label": "negative"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma Q2 Results: Profit falls 36% YoY to Rs 1,989 crore on exceptional charges",
+      "label": "negative"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma's ILUMYA Gets US Nod for Psoriatic Arthritis Treatment; Shares Up 1.5%",
+      "label": "positive"
+    },
+    {
+      "company": "sun-pharma",
+      "title": "Sun Pharma books Rs 346 crore Organon deal costs in Q2; profit falls 36%",
+      "label": "negative"
+    }
+  ]
+}

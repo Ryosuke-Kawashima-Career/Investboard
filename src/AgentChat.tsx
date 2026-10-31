@@ -1,35 +1,31 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Bot, ExternalLink, SendHorizontal, Trash2 } from "lucide-react";
-import { MAX_QUESTIONS, answer, type AgentReply } from "./agent";
-import { syntheticSentiment } from "./sentiment";
-import type { Listing } from "./data";
+import {
+  MAX_QUESTIONS,
+  answer,
+  type AgentContext,
+  type AgentReply,
+} from "./agent";
 
 type Turn = { id: number; question: string; reply: AgentReply };
-const suggestions = [
+const suggestions = (real: boolean) => [
   "How has the price moved?",
-  "What is the sentiment?",
-  "Any news or risks?",
+  real ? "What is the headline tone?" : "What is the sentiment?",
+  real ? "Any recent headlines?" : "Any news or risks?",
   "Should I buy?",
 ];
 
 export function AgentChat({
-  listing,
-  today,
+  ctx,
+  symbol,
 }: {
-  listing: Listing;
-  today: string;
+  ctx: AgentContext;
+  symbol: string;
 }) {
+  const real = !ctx.sentiment.synthetic;
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState("");
   const nextId = useRef(0);
-  const ctx = useMemo(
-    () => ({
-      listing,
-      sentiment: syntheticSentiment(listing.id, today),
-      today,
-    }),
-    [listing, today],
-  );
   function ask(question: string) {
     const q = question.trim().slice(0, 500);
     if (!q) return;
@@ -45,9 +41,9 @@ export function AgentChat({
       <div className="sentiment-head">
         <div>
           <div className="eyebrow">
-            <Bot size={12} /> RESEARCH AGENT · PREVIEW
+            <Bot size={12} /> RESEARCH AGENT · {real ? "RULE-BASED" : "PREVIEW"}
           </div>
-          <h2 id="agent-title">Ask about {listing.symbol}</h2>
+          <h2 id="agent-title">Ask about {symbol}</h2>
         </div>
         <button
           className="agent-clear"
@@ -57,20 +53,31 @@ export function AgentChat({
           <Trash2 size={13} /> Clear conversation
         </button>
       </div>
-      <p className="sentiment-banner">
-        <Bot size={14} /> Scripted demo over synthetic data — answers stand in
-        for AI-generated ones. Research only: no advice, targets or forecasts.
-      </p>
+      {real ? (
+        <p className="sentiment-banner real">
+          <Bot size={14} /> Rule-based answers from the stored prices and
+          headlines on this page — no AI model, no web access. Research only: no
+          advice, targets or forecasts.
+        </p>
+      ) : (
+        <p className="sentiment-banner">
+          <Bot size={14} /> Scripted demo over synthetic data — answers stand in
+          for AI-generated ones. Research only: no advice, targets or forecasts.
+        </p>
+      )}
       <ol className="agent-log" aria-live="polite">
         {turns.map((t) => (
           <li key={t.id}>
             <p className="agent-q">{t.question}</p>
             <div className={`agent-a ${t.reply.kind}`}>
-              <span className="agent-badge">AI-generated · demo</span>
+              <span className="agent-badge">
+                {real ? "Rule-based answer" : "AI-generated · demo"}
+              </span>
               <p>{t.reply.text}</p>
               {t.reply.period && (
                 <p className="small muted">
-                  Data period {t.reply.period} · Retrieved {today} (synthetic)
+                  Data period {t.reply.period}
+                  {real ? "" : ` · Retrieved ${ctx.today} (synthetic)`}
                 </p>
               )}
               {t.reply.citations.length > 0 && (
@@ -94,7 +101,7 @@ export function AgentChat({
       </ol>
       {!turns.length && (
         <div className="agent-chips">
-          {suggestions.map((s) => (
+          {suggestions(real).map((s) => (
             <button key={s} className="agent-chip" onClick={() => ask(s)}>
               {s}
             </button>

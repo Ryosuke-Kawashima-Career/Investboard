@@ -33,6 +33,8 @@ export interface RealListing extends Omit<
   signal: RealSignal;
   signals: RealSignal[];
   newsRetrievedAt: string | null;
+  /** Present on list items: history is the last month only and evidence is omitted. */
+  detail?: "summary";
   newsError: { code: string } | null;
   error: { code: string } | null;
 }
@@ -80,6 +82,20 @@ export async function loadResearch(signal: AbortSignal): Promise<RealResponse> {
   if (result.meta?.mode !== "real" || !Array.isArray(result.data))
     throw new Error("Unexpected research response");
   return result;
+}
+export async function loadCompany(
+  companyId: string,
+  signal: AbortSignal,
+): Promise<RealListing> {
+  const response = await fetch(
+    `/api/companies/${encodeURIComponent(companyId)}`,
+    { signal },
+  );
+  if (!response.ok) throw new Error("Company detail unavailable");
+  const result = await response.json();
+  if (result.meta?.mode !== "real" || !result.data?.id)
+    throw new Error("Unexpected company response");
+  return result.data;
 }
 export function rangeStart(today: string, period: string) {
   const d = new Date(today + "T00:00:00Z"),

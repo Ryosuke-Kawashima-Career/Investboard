@@ -12,7 +12,7 @@ export function daily(listing: ListingManifest = manifest): any {
             exchangeName: "NSI",
             instrumentType: "EQUITY",
             exchangeTimezoneName: "Asia/Kolkata",
-            longName: listing.name,
+            longName: listing.providerName ?? listing.name,
           },
           timestamp: Array.from(
             { length: n },

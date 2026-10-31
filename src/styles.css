@@ -1927,3 +1927,13 @@ dd {
 .agent-composer button { display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:50%; background:var(--macos-accent-blue); color:#fff; cursor:pointer; transition:transform var(--macos-duration-fast) var(--macos-ease-spring), opacity var(--macos-duration-fast); }
 .agent-composer button:disabled { opacity:.35; cursor:default; }
 @media(max-width:640px) { .agent-chat { padding:16px; } .agent-a { max-width:100%; } }
+
+/* spec 1.7.0 real headline tone */
+.sentiment-banner.real { background:var(--macos-surface-selected); color:#0a4fa3; }
+.sentiment-eval { margin-top:10px; font-size:12px; }
+.sentiment-eval summary { cursor:pointer; color:var(--macos-accent-blue); }
+.eval-scroll { overflow-x:auto; max-width:100%; }
+.eval-matrix { border-collapse:collapse; margin-top:8px; font-size:11px; font-variant-numeric:tabular-nums; }
+.eval-matrix th, .eval-matrix td { padding:4px 8px; border-bottom:1px solid var(--macos-border-subtle); text-align:right; white-space:nowrap; }
+.eval-matrix th[scope="row"], .eval-matrix thead th:first-child { text-align:left; color:var(--macos-text-secondary); font-weight:500; }
+.eval-matrix td.diag { font-weight:700; color:var(--macos-text-primary); background:rgba(52,199,89,.1); }

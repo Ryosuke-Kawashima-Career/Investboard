@@ -34,6 +34,17 @@
         "--strictPort"
       ],
       "port": 5180
+    },
+    {
+      "name": "research-app-3003",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--env-file-if-exists=.env",
+        "--input-type=module",
+        "-e",
+        "process.env.PORT='3003'; process.env.DISABLE_REFRESH='1'; const m = await import('./server/index.ts'); m.run();"
+      ],
+      "port": 3003
     }
   ]
 }

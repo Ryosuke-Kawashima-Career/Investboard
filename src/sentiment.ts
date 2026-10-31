@@ -11,6 +11,8 @@ export const LABELS: SentimentLabel[] = [
 ];
 export const MIN_ITEMS = 30;
 export const MIN_AUTHORS = 10;
+export type MinSample = { items: number; authors: number };
+const DEFAULT_MIN: MinSample = { items: MIN_ITEMS, authors: MIN_AUTHORS };
 const CONCENTRATION_SHARE = 0.25;
 const SPIKE_RATIO = 3;
 
@@ -54,10 +56,10 @@ function tally(items: SentimentItem[]) {
   for (const i of items) counts[i.label]++;
   return counts;
 }
-function sufficient(items: SentimentItem[]) {
+function sufficient(items: SentimentItem[], min: MinSample) {
   return (
-    items.length >= MIN_ITEMS &&
-    new Set(items.map((i) => i.author)).size >= MIN_AUTHORS
+    items.length >= min.items &&
+    new Set(items.map((i) => i.author)).size >= min.authors
   );
 }
 // Share of positive among classified (non-unclassifiable) items, in percent.
@@ -73,6 +75,7 @@ export function aggregateSentiment(
   raw: SentimentItem[],
   days: number,
   today: string,
+  min: MinSample = DEFAULT_MIN,
 ): SentimentAggregate {
   const seen = new Set<string>();
   const unique = raw.filter((i) => !seen.has(i.url) && seen.add(i.url));
@@ -98,10 +101,12 @@ export function aggregateSentiment(
     ? rest.reduce((a, b) => a + b, 0) / rest.length
     : 0;
   if (peak > Math.max(3, SPIKE_RATIO * restMean)) flags.push("volume-spike");
-  const ok = sufficient(current);
+  const ok = sufficient(current, min);
   const counts = ok ? tally(current) : null;
   const nowShare = counts && positiveShare(counts);
-  const priorShare = sufficient(prior) ? positiveShare(tally(prior)) : null;
+  const priorShare = sufficient(prior, min)
+    ? positiveShare(tally(prior))
+    : null;
   return {
     days,
     from,
@@ -126,6 +131,7 @@ export type SentimentSource =
       status: "available";
       retrievedAt: string;
       items: SentimentItem[];
+      minSample?: MinSample;
     }
   | { name: string; status: "unavailable"; reason: string };
 export type SentimentBundle = {
@@ -136,7 +142,7 @@ export type SentimentBundle = {
     name: string;
     status: "available";
     points: { date: string; value: number }[];
-  };
+  } | null;
 };
 
 // Small seeded PRNG so each listing's fixture is stable across reloads.

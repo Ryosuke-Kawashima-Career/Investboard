@@ -10,7 +10,9 @@ export class ProviderError extends Error {
   }
 }
 const safeCode = (e: unknown) =>
-  e instanceof Error && /^[A-Z_]+$/.test(e.message) ? e.message : "REFRESH_FAILED";
+  e instanceof Error && /^[A-Z_]+$/.test(e.message)
+    ? e.message
+    : "REFRESH_FAILED";
 export type ProviderOptions = {
   universe?: ListingManifest[];
   news?: boolean;
@@ -35,10 +37,11 @@ export class Provider {
     this.pauseMs = options.pauseMs ?? 400;
   }
   budget() {
-    const configured = Number(process.env.PROVIDER_DAILY_BUDGET || 60);
+    // Sized for one full refresh (chart + news per listing) plus retries; spec 1.8.0.
+    const configured = Number(process.env.PROVIDER_DAILY_BUDGET || 220);
     return Number.isInteger(configured) && configured > 0
-      ? Math.min(100, configured)
-      : 60;
+      ? Math.min(250, configured)
+      : 220;
   }
   async request(url: URL, format: "json" | "text" = "json") {
     const cooldown = `blockedUntil:${url.hostname}`;

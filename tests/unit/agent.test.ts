@@ -1,15 +1,16 @@
 import { expect, it } from "vitest";
-import { MAX_QUESTIONS, answer } from "../../src/agent";
+import {
+  MAX_QUESTIONS,
+  answer,
+  demoAgentContext,
+  realAgentContext,
+} from "../../src/agent";
+import type { RealListing } from "../../src/service";
 import { listings } from "../../src/data";
-import { syntheticSentiment } from "../../src/sentiment";
 
 const today = "2026-10-30";
 const listing = listings.find((l) => l.symbol === "TCS")!;
-const ctx = {
-  listing,
-  sentiment: syntheticSentiment(listing.id, today),
-  today,
-};
+const ctx = demoAgentContext(listing, today);
 
 it("declines buy/sell advice, targets and forecasts and offers evidence instead", () => {
   for (const q of [
@@ -60,4 +61,35 @@ it("lists evidence with links", () => {
 
 it("enforces the session question cap", () => {
   expect(answer("price?", ctx, MAX_QUESTIONS).kind).toBe("cap");
+});
+
+it("answers from real stored data without calling it synthetic", () => {
+  const real = {
+    ...listing,
+    quote: { ...listing.quote, source: "Yahoo Finance chart" },
+    history: listing.history.map((p) => ({ ...p, source: "Yahoo" })),
+    newsRetrievedAt: "2026-10-31T08:00:00Z",
+    evidence: Array.from({ length: 12 }, (_, i) => ({
+      id: `n${i}`,
+      title: i % 3 ? "Acme profit jumps 20%" : "Acme shares fall after probe",
+      url: `https://news.google.com/rss/articles/${i}`,
+      publisher: `Pub ${i % 6}`,
+      publishedAt: "2026-10-29",
+      type: "news-report",
+    })),
+  } as unknown as RealListing;
+  const rctx = realAgentContext(real, "2026-10-31");
+  for (const q of [
+    "price?",
+    "What is the tone?",
+    "Any news?",
+    "Should I buy?",
+  ]) {
+    const reply = answer(q, rctx, 0);
+    expect(JSON.stringify(reply), q).not.toMatch(/synthetic/i);
+  }
+  const tone = answer("What is the tone?", rctx, 0);
+  expect(tone.kind).toBe("answer");
+  expect(tone.text).toMatch(/8 positive, 4 negative/);
+  expect(tone.text).toMatch(/Reddit, X, Google Trends are unavailable/);
 });
