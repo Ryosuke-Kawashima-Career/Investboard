@@ -1,0 +1,14 @@
+{
+  "priceAndCalendarCharts": "passed",
+  "saveReloadRemove": "passed",
+  "mode": "real",
+  "providerCallsDuringTrial": 0,
+  "listingVerified": true,
+  "listings": 10,
+  "newsHeadlines": 198,
+  "observations": 248,
+  "evidenceCount": 21,
+  "disclosureLinkAndSaveReload": "passed",
+  "genuinePriceJourney": "available",
+  "error": null
+}

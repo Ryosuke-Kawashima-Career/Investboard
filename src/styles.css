@@ -1845,3 +1845,12 @@ dd {
     font-size: 8px;
   }
 }
+.chart-panel { margin:24px 0; padding:24px; border:1px solid #e1e7dc; border-radius:18px; background:#fffefa; min-width:0; }
+.chart-panel p, .price small { overflow-wrap:anywhere; line-height:1.65; }
+.chart-panel h2 { margin-bottom:16px; }
+.chart-panel h3 { margin:14px 0 8px; }
+.chart-panel .evidence-card { padding:12px 0; }
+.detail-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:24px 0; }
+.detail-header h1 { font-size:clamp(24px,4vw,36px); }
+.price small { display:block; font-size:11px; color:#53604e; font-weight:400; }
+@media(max-width:640px) { .chart-panel { padding:16px; } .section-heading { flex-wrap:wrap; gap:12px; } }

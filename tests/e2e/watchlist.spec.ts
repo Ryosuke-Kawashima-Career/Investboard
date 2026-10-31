@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 test("distinct exchange listings persist, remove and reset", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await page
     .getByRole("textbox", { name: "Search companies or symbols" })
     .fill("TCS");
@@ -37,7 +37,7 @@ test("corrupt storage does not break research", async ({ page }) => {
   await page.addInitScript(() =>
     localStorage.setItem("arbor.watchlist.v1", "{broken"),
   );
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await expect(page.getByRole("status")).toContainText(
     "Saved watchlist could not be read",
   );
@@ -67,7 +67,7 @@ test("denied storage keeps watchlist usable for the session", async ({
       },
     });
   });
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await page
     .locator(".company-table")
     .getByRole("button", { name: "Save TCS NSE", exact: true })

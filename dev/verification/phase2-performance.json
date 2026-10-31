@@ -1,0 +1,7 @@
+{
+  "profile": "360px, 4x CPU, 1.6 Mbps down, 750 Kbps up, 150ms latency, production build, warm server SQLite cache, cold browser cache",
+  "data": "Actual Yahoo Finance observations from the local persistent cache",
+  "primaryUsableMs": 2749,
+  "targetMs": 3000,
+  "passed": true
+}

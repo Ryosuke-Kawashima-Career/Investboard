@@ -1,7 +1,7 @@
 ---
 document_type: "implementation_plan"
-version: "1.1.0"
-target_spec_version: "1.1.0"
+version: "1.4.0"
+target_spec_version: "1.4.0"
 status: "In Progress"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -11,7 +11,7 @@ author: "Codex"
 
 Delivery order: Front UI/UX implementation -> Minimum workable backend implementation -> Feedback and improvement by the user. Deliver a complete fixture-backed interface first, connect the smallest backend that makes the core research journey work, then improve the working product from actual user feedback.
 
-Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.1.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 and Phase 3 remain pending. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
+Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.4.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 is implemented and verified against real Yahoo Finance and Google News data (2026-10-31); Phase 3 is pending. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
 
 ## Execution and verification conventions
 
@@ -37,12 +37,14 @@ Phase exit achieved: a runnable UI/UX demonstration supports searching, inspecti
 
 Before TASK-03 and TASK-04, record the smallest supported company universe and permitted market/content sources, costs, quotas, delivery modes, freshness thresholds, historical adjustment basis, hosting, and refresh approach. Select a precise versioned discovery definition and missing-data policy. These decisions complete TASK-01's provisional contracts without changing its frontend-first order.
 
-- [ ] TASK-03 — Implement a thin server API and one market-data adapter for company search, quote, profile, and history. Validate payloads and inputs; keep credentials server-side. Add bounded requests, basic caching, retry/backoff, and a provider-permitted refresh mechanism. Handle exchange collisions, zero previous close, gaps, market closures, stale data, and outages. Connect the Phase 1 UI to real supported data. Covers REQ-01–REQ-03, REQ-09, REQ-10. Verification: `npm run test:unit -- market-data.test.ts` and `npm run test:integration -- market-api.test.ts`. Exit: a supported company can be searched and inspected end to end with truthful prices, sources, and timestamps.
-- [ ] TASK-04 — Connect one approved web-evidence source. Implement company matching, URL canonicalization, deduplication, publication/retrieval timestamps, and short factual summaries with evidence links, contrary evidence, and abstention. Start with deterministic extraction; a generative model is optional. Restrict fetched sources and escape external text. Covers REQ-05, REQ-08–REQ-10. Verification: `npm run test:integration -- evidence-pipeline.test.ts`. Include unrelated similarly named companies, duplicate stories, missing dates, conflicting reports, blocked sources, and instruction-bearing content. Exit: the UI shows genuine company-linked evidence with no unsupported summary claims.
-- [ ] TASK-05 — Implement sector filtering and the smallest useful set of versioned discovery signals supported by the chosen data. Expose computation, period, sources, missing values, risks, and limitations. Covers REQ-04, REQ-05, REQ-08. Verification: `npm run test:unit -- discovery.test.ts` and `npm run test:e2e -- discovery.spec.ts`. Include tied values, missing fundamentals, stale evidence, and empty filters. Exit: discovery results are reproducible and explainable.
-- [ ] TASK-07 — Verify minimum backend reliability and protection before the user trial: input validation, secret handling, content escaping, fetch allowlists, quotas, safe logs, and labeled cached/unavailable behavior during outages. Check frontend accessibility and cached-view performance under a documented mobile profile. Covers REQ-07, REQ-09, REQ-10. Verification: `npm run test:integration -- service-resilience.test.ts`, `npm run test:e2e -- accessibility.spec.ts`, and `npm run test:performance`. Exit: no credentials or watchlists appear in logs; core views remain usable during provider failures and meet the specified 3-second cached-view target.
+- [x] TASK-03 — Implement a thin server API and one market-data adapter for company search, quote, profile, and history. Validate payloads and inputs; keep credentials server-side. Add bounded requests, basic caching, retry/backoff, and a provider-permitted refresh mechanism. Handle exchange collisions, zero previous close, gaps, market closures, stale data, and outages. Connect the Phase 1 UI to real supported data. Covers REQ-01–REQ-03, REQ-09, REQ-10. Verification: `npm run test:unit -- market-data.test.ts` and `npm run test:integration -- market-api.test.ts`. Exit: a supported company can be searched and inspected end to end with truthful prices, sources, and timestamps.
+- [x] TASK-04 — Connect one approved web-evidence source. Implement company matching, URL canonicalization, deduplication, publication/retrieval timestamps, and short factual summaries with evidence links, contrary evidence, and abstention. Start with deterministic extraction; a generative model is optional. Restrict fetched sources and escape external text. Covers REQ-05, REQ-08–REQ-10. Verification: `npm run test:integration -- evidence-pipeline.test.ts`. Include unrelated similarly named companies, duplicate stories, missing dates, conflicting reports, blocked sources, and instruction-bearing content. Exit: the UI shows genuine company-linked evidence with no unsupported summary claims.
+- [x] TASK-05 — Implement sector filtering and the smallest useful set of versioned discovery signals supported by the chosen data. Expose computation, period, sources, missing values, risks, and limitations. Covers REQ-04, REQ-05, REQ-08. Verification: `npm run test:unit -- discovery.test.ts` and `npm run test:e2e -- discovery.spec.ts`. Include tied values, missing fundamentals, stale evidence, and empty filters. Exit: discovery results are reproducible and explainable.
+- [x] TASK-07 — Verify minimum backend reliability and protection before the user trial: input validation, secret handling, content escaping, fetch allowlists, quotas, safe logs, and labeled cached/unavailable behavior during outages. Check frontend accessibility and cached-view performance under a documented mobile profile. Covers REQ-07, REQ-09, REQ-10. Verification: `npm run test:integration -- service-resilience.test.ts`, `npm run test:e2e -- accessibility.spec.ts`, and `npm run test:performance`. Exit: no credentials or watchlists appear in logs; core views remain usable during provider failures and meet the specified 3-second cached-view target.
 
-Phase exit: the user can complete the core research journey with real supported data and the local watchlist. Keep deployment simple; multiple providers, distributed infrastructure, and optional AI must not delay this milestone. Required data permissions, attribution, freshness, and basic protections remain part of the minimum implementation. A controlled user trial is distinct from public launch.
+Verification on 2026-10-31 (spec 1.4.0): `npm run build` passed; `npm run test:unit` 24 passed; `npm run test:integration` 18 passed; `npm run test:e2e -- --workers=4` 26 passed; `npm run test:provider` acquired 248 sessions for each of 10 listings and 198 deduplicated headlines; `npm run test:performance` 2517–2810 ms (target 3000, thin margin); `scripts/trial.mjs` passed with 0 upstream calls. TASK-04 abstains from summaries and does not classify reporting vs opinion or positive vs negative, as spec 1.4.0 allows; headlines are labeled accordingly. See [verification record](../verification/phase2_real_data.md).
+
+Phase exit achieved: the user can complete the core research journey with real supported data and the local watchlist. Keep deployment simple; multiple providers, distributed infrastructure, and optional AI must not delay this milestone. Required data permissions, attribution, freshness, and basic protections remain part of the minimum implementation. A controlled user trial is distinct from public launch.
 
 ### Phase 3: Feedback and improvement by the user
 
@@ -82,4 +84,32 @@ During Phase 3 user-feedback iterations, revise scope and acceptance criteria in
 | 1.0.2 | 2026-10-31 | Completed TASK-01, TASK-02 and TASK-06; recorded framework, fixture/API contracts, passing checks and frontend review artifacts | Initial frontend creation | In Progress |
 | 1.1.0 | 2026-10-31 | Added TASK-09 for inspectable candlestick history | User chart request | In Progress |
 
+| 1.2.0–1.2.1 | 2026-10-31 | Historical Alpha Vantage backend attempt: identity succeeded, daily prices unavailable; tracked integration subsequently reverted by user to ff1b55f; untracked artifacts survived | Preserved attempt history | Superseded |
+| 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
+| 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
 
+## Replacement backend contract · 1.3.0
+
+The user reverted tracked integration to ff1b55f (frontend baseline). No further git revert is necessary. Recoverable previous artifacts are archived in ignored `.local/checkpoints/alpha-before-yahoo.zip`. The earlier market-source choice is superseded, not the backend requirements. Phase 2 tasks remain open until replacement verification passes.
+
+Use Node 24/TypeScript with SQLite, one source-isolated Yahoo database, a local read-only API and existing browser watchlist. Source: Yahoo Finance public chart endpoint, the same underlying service used by yfinance; direct Node integration avoids a Python runtime. Universe: NSE:RELIANCE / RELIANCE.NS / INR / NSI, verified against response metadata and official company filing. BSE is not active: the probe supplied only one observation. Do not relabel NSE data as BSE.
+
+Require at least 22 genuine daily sessions. Use Yahoo quote OHLC arrays without dividend-adjusting, repairing or interpolating; label provider-supplied prices as split-adjusted by Yahoo, not raw unadjusted exchange ticks. Ignore adjclose arrays. Validate company/symbol/exchange/currency/timezone, array lengths, timestamps, nulls and OHLC invariants. Exclude the current India date conservatively so an unfinished daily candle is never called EOD. Retain supplied historical special sessions and declare missing-session coverage unknown without an exchange calendar.
+
+Derive latest and previous close from the same series. Calendar ranges 1M/6M/1Y, genuine OHLC or explicit close-only line fallback, nullable fundamentals, date-only source precision, separate retrieval/refresh/cache status. Freshness unknown without a calendar, stale beyond seven calendar days. No fixture fallback in real mode; explicit demo stays separate, unsupported saved IDs removable.
+
+Yahoo is an unofficial best-effort internet source, not an exchange-licensed service or guaranteed entitlement. Local personal research only; no public redistribution claim, purchase or deployment. Fixed HTTPS host/path, public DNS addresses only, redirects disabled, 10-second timeout, at most one transient retry, persisted 20-request rolling-day ceiling and Retry-After/429 cooldown. Startup if empty, then weekday 19:00 Asia/Kolkata and budgeted operator refresh. No browser-action upstream calls.
+
+Reuse operator-verified original company evidence with exact URL, supported summary, nullable publication and actual retrieval. recent-disclosure-v1 uses the inclusive 30-day publication window in Asia/Kolkata; unknown dates and missing contrary evidence remain disclosed. Actual-source browser journey, restart/outage checks, deterministic offline CI, mobile 3-second performance target and source register are required before Phase 2 completion.
+
+Verification: `npm run build`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e -- --workers=4`, `npm run test:performance`, `npm run test:provider` (one actual acquisition), and `node --env-file-if-exists=.env scripts/trial.mjs` (reuse acquired data).
+
+## MVP backend scope · 1.4.0
+
+Universe: ten NSE large caps across seven sectors, fetched from the same Yahoo chart endpoint and each verified against response symbol, exchange (NSI), currency, timezone and exact company name: RELIANCE, TCS, INFY, HDFCBANK, ICICIBANK, HINDUNILVR, ITC, BHARTIARTL, LT, SUNPHARMA. A failed listing keeps its last good data and is reported individually; other listings still refresh.
+
+Evidence: Google News RSS search (`news.google.com/rss/search`, exact company name, last 30 days, India edition) per company, for personal non-commercial use as the feed terms state. Keep only headlines that name the company or an approved alias; deduplicate syndicated copies by normalized headline; keep publisher, Google News link, publication date (India) and retrieval time. No generated summary: headlines are shown as published, unclassified as reporting or opinion and not checked against article bodies. Curated official disclosures (RELIANCE) remain.
+
+Signals, versioned, deterministic, alphabetical results, never a forecast: `recent-disclosure-v1` (unchanged); `price-momentum-1m-v1` = latest close vs the last close on or before one calendar month earlier, qualifies at ≥ +5%; `news-coverage-7d-v1` = distinct company-matched headlines published in the 7 India calendar days ending today, qualifies at ≥ 3. Missing history yields no value and never qualifies.
+
+Requests: one chart and one news request per listing per refresh, sequential with a short pause; persisted shared budget 60 per rolling day (hard cap 100); per-host Retry-After/429 cooldown. Fixed allowlist: Yahoo chart paths for universe symbols only, and the Google News search path.

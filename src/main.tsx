@@ -1,3 +1,4 @@
+import RealApp from "./RealApp";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -948,6 +949,11 @@ function App() {
 }
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    {new URLSearchParams(location.search).get("mode") === "demo" ||
+    import.meta.env.VITE_DATA_MODE === "demo" ? (
+      <App />
+    ) : (
+      <RealApp />
+    )}
   </React.StrictMode>,
 );

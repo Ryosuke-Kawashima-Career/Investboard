@@ -17,7 +17,7 @@ export interface HistoryPoint {
   close: number;
   currency: "INR";
   source: string;
-  basis: "unadjusted";
+  basis: "unadjusted" | "split-adjusted";
 }
 export interface Evidence {
   id: string;

@@ -5,11 +5,26 @@ import { money, type Listing } from "./data";
 export function StockChart({
   listing,
   period,
+  real = false,
+  rangeFrom,
+  rangeTo,
 }: {
-  listing: Listing;
+  listing: Pick<Listing, "id" | "name" | "history">;
+  real?: boolean;
+  rangeFrom?: string;
+  rangeTo?: string;
   period: string;
 }) {
   const [mode, setMode] = useState<"Candles" | "Line">("Candles");
+  useEffect(() => {
+    if (
+      listing.history.some(
+        (p) =>
+          p.open === undefined || p.high === undefined || p.low === undefined,
+      )
+    )
+      setMode("Line");
+  }, [listing]);
   const [cursor, setCursor] = useState<number | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartWidth, setChartWidth] = useState(760);
@@ -23,10 +38,14 @@ export function StockChart({
   }, []);
   const points = useMemo(
     () =>
-      listing.history.slice(
-        -(period === "1M" ? 22 : period === "6M" ? 130 : 260),
-      ),
-    [listing, period],
+      real
+        ? listing.history.filter(
+            (p) => p.date >= (rangeFrom || "") && p.date <= (rangeTo || "9999"),
+          )
+        : listing.history.slice(
+            -(period === "1M" ? 22 : period === "6M" ? 130 : 260),
+          ),
+    [listing, period, real, rangeFrom, rangeTo],
   );
   const bars = useMemo(
     () =>
@@ -88,6 +107,15 @@ export function StockChart({
               key={value}
               className={`macos-segmented-btn ${mode === value ? "active" : ""}`}
               aria-pressed={mode === value}
+              disabled={
+                value === "Candles" &&
+                points.some(
+                  (p) =>
+                    p.open === undefined ||
+                    p.high === undefined ||
+                    p.low === undefined,
+                )
+              }
               onClick={() => setMode(value)}
             >
               {value}
@@ -172,7 +200,7 @@ export function StockChart({
             className="chart-full candle-chart"
             viewBox={`0 0 ${width} ${height}`}
             role="img"
-            aria-label={`${listing.name} synthetic ${period} price history, INR, unadjusted — ${mode.toLowerCase()}`}
+            aria-label={`${listing.name} ${real ? "observed" : "synthetic"} ${period} price history, INR, ${real ? "split-adjusted" : "unadjusted"} — ${mode.toLowerCase()}`}
             preserveAspectRatio="none"
           >
             {[0, 1, 2, 3].map((n) => {
@@ -288,9 +316,12 @@ export function StockChart({
         Hover or focus the chart and use ← → to inspect.
       </p>
       <p className="chart-disclosure">
-        INR · Unadjusted synthetic{" "}
-        {mode === "Candles" ? "OHLC" : "closing prices"} · Weekends omitted; no
-        interpolation.{" "}
+        INR ·{" "}
+        {real ? "Yahoo split-adjusted observations" : "Unadjusted synthetic"}{" "}
+        {mode === "Candles" ? "OHLC" : "closing prices"} ·{" "}
+        {real
+          ? "Supplied sessions retained; no gap filling."
+          : "Weekends omitted; no interpolation."}{" "}
         {mode === "Candles" && period !== "1M"
           ? "First/last bars may cover partial periods."
           : ""}

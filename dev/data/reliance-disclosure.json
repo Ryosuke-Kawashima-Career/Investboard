@@ -1,0 +1,17 @@
+{
+  "publishedAt": null,
+  "limitations": "Single company-authored filing hosted by the exchange; not independent reporting. Publication time was not established from the document body; the board approval date is not substituted for publication. No contrary-evidence search is represented. No growth or valuation claim is inferred.",
+  "summary": "Reliance filed unaudited standalone results for the quarter ended 30 June 2026. The filing identifies Reliance Industries Limited, scrip code 500325 and ISIN INE002A01018, and records board approval on 17 July 2026.",
+  "claimLocations": [
+    "General information about company: scrip code, ISIN, company name, board meeting date",
+    "Financial Results Ind-AS: reporting period and unaudited standalone classification"
+  ],
+  "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_175606_17072026194906_iXBRL_WEB.html",
+  "operatorVerified": true,
+  "title": "Standalone financial results for the quarter ended 30 June 2026",
+  "retrievedAt": "2026-10-31T07:46:22.5796087Z",
+  "publisher": "Reliance Industries Limited",
+  "companyId": "reliance",
+  "companyName": "Reliance Industries Limited",
+  "verifiedAt": "2026-10-31T07:46:22.5796087Z"
+}

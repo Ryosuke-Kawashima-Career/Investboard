@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 test("research journey: search, listing identity, quote, history and evidence", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await expect(
     page.getByRole("heading", { name: "Find your next question." }),
   ).toBeVisible();
@@ -42,7 +42,7 @@ test("research journey: search, listing identity, quote, history and evidence", 
 test("filters, empty state, keyboard search and mobile layout", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await page.getByRole("button", { name: "Healthcare", exact: true }).click();
   await expect(page.locator(".table-row")).toHaveCount(1);
   await page
@@ -70,7 +70,7 @@ test("filters, empty state, keyboard search and mobile layout", async ({
 test("methodology dialog, partial data and recoverable error state", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await page.getByRole("button", { name: "About synthetic demo" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await page

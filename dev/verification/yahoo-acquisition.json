@@ -1,0 +1,51 @@
+{
+  "source": "Yahoo Finance",
+  "symbol": "RELIANCE.NS",
+  "listing": "NSE:RELIANCE",
+  "currency": "INR",
+  "basis": "split-adjusted",
+  "verified": {
+    "id": "NSE:RELIANCE",
+    "companyId": "reliance",
+    "name": "Reliance Industries Limited",
+    "symbol": "RELIANCE",
+    "exchange": "NSE",
+    "providerSymbol": "RELIANCE.NS",
+    "currency": "INR",
+    "sector": "Diversified",
+    "initials": "R",
+    "color": "blue",
+    "description": "Diversified business with energy, retail and digital services operations.",
+    "identitySource": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_175606_17072026194906_iXBRL_WEB.html",
+    "bseCode": "500325",
+    "isin": "INE002A01018",
+    "source": "Yahoo Finance",
+    "sourceUrl": "https://finance.yahoo.com/quote/RELIANCE.NS/history/",
+    "basis": "split-adjusted",
+    "verifiedAt": "2026-10-31T08:02:07.960Z",
+    "providerName": "Reliance Industries Limited"
+  },
+  "coverage": {
+    "observations": 248,
+    "availableFrom": "2025-10-30",
+    "availableTo": "2026-10-30",
+    "gaps": "Unknown: no verified exchange calendar",
+    "basis": "split-adjusted"
+  },
+  "quote": {
+    "price": 1164.9000244140625,
+    "previousClose": 1167.4000244140625,
+    "currency": "INR",
+    "source": "Yahoo Finance",
+    "sourceDate": "2026-10-30",
+    "sourceTimestamp": null,
+    "fetchedTimestamp": "2026-10-31T08:02:07.960Z",
+    "timestampPrecision": "date",
+    "delivery": "end-of-day",
+    "freshness": "unknown",
+    "cacheStatus": "cached"
+  },
+  "acquiredAt": "2026-10-31T08:02:07.960Z",
+  "observationsSha256": "ed8595700d833b902800b27d8e43b15fc1faad563317d4718a62484bf36eaad1",
+  "applicationRequestsIncludingDiscoveryProbes": 4
+}

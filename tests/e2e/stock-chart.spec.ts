@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 test("candles, periods, line toggle and accessible inspection", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?mode=demo");
   await page
     .locator(".company-table")
     .getByRole("button", { name: "Tata Consultancy Services", exact: true })

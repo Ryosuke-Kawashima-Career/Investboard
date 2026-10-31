@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { listings } from "./data";
 export const STORAGE_KEY = "arbor.watchlist.v1";
-export function useWatchlist() {
+export function useWatchlist(preserveUnsupported = false) {
   const [initial] = useState(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -15,7 +15,9 @@ export function useWatchlist() {
         throw new Error("invalid");
       return {
         ids: [...new Set<string>(value.listingIds)].filter((id) =>
-          listings.some((l) => l.id === id),
+          preserveUnsupported
+            ? /^(NSE|BSE):[A-Z0-9&.-]{1,30}$/.test(id)
+            : listings.some((l) => l.id === id),
         ),
         warning: "",
       };

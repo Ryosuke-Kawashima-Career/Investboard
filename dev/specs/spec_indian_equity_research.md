@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.1.0"
+version: "1.4.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -10,7 +10,7 @@ author: "Codex"
 
 Build a mobile-friendly web application that helps people in India view Indian stock prices and discover companies worth further research using traceable public web information. Start with a clear research experience and explainable discovery signals so users can assess evidence before making their own investment decisions.
 
-Implementation: [Implementation plan](../plans/implementation_plan_indian_equity_research.md), version 1.1.0.
+Implementation: [Implementation plan](../plans/implementation_plan_indian_equity_research.md), version 1.4.0.
 
 ## User need and scope
 
@@ -52,7 +52,7 @@ The MVP supports research and a local watchlist. Brokerage connectivity, order e
 
 ## Proposed architecture and data contracts
 
-Phase 1 uses React 19, TypeScript and Vite 6 for a responsive fixture-backed frontend, with Playwright browser journeys and Vitest contract tests. macos-ui-polish tokens provide the framed light workspace. The local demonstration contains five companies and six distinct exchange listings. See [frontend contracts](../contracts/frontend_contracts.md) for normalized entities and provisional API interfaces. A server API and background ingestion remain Phase 2 work; no provider is connected. Deliver the frontend with fixtures first, then connect the same contracts to real providers.
+Phase 1 uses React 19, TypeScript and Vite 6 for a responsive fixture-backed frontend, with Playwright browser journeys and Vitest contract tests. macos-ui-polish tokens provide the framed light workspace. The local demonstration contains five companies and six distinct exchange listings. See [frontend contracts](../contracts/frontend_contracts.md) for normalized entities and provisional API interfaces. Phase 2 adds a Node 24 server API with SQLite, Yahoo Finance prices and Google News headlines; see the MVP backend scope below. Deliver the frontend with fixtures first, then connect the same contracts to real providers.
 
 Data flow: approved market/content providers -> adapters -> validation and normalization -> cache/store -> query API -> UI. Background jobs refresh quotes and content independently. Start with provider-permitted refresh intervals; the UI must not imply real-time delivery without a provider guarantee.
 
@@ -84,4 +84,32 @@ Measure task success during usability review: can a participant find a company, 
 | 1.0.0 | 2026-10-31 | Initial MVP scope, contracts, and acceptance criteria | User need | Draft |
 | 1.0.1 | 2026-10-31 | Recorded the Phase 1 framework, fixture universe, contract document and verification boundaries | Initial frontend implementation | Draft |
 | 1.1.0 | 2026-10-31 | Added inspectable OHLC candlestick bars alongside line history | User chart request | Draft |
+| 1.2.0–1.2.1 | 2026-10-31 | Historical Alpha Vantage backend attempt: identity succeeded, daily prices unavailable; tracked integration subsequently reverted by user to ff1b55f; untracked artifacts survived | Preserved attempt history | Superseded |
+| 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
+| 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
 
+## Replacement backend contract · 1.3.0
+
+The user reverted tracked integration to ff1b55f (frontend baseline). No further git revert is necessary. Recoverable previous artifacts are archived in ignored `.local/checkpoints/alpha-before-yahoo.zip`. The earlier market-source choice is superseded, not the backend requirements. Phase 2 tasks remain open until replacement verification passes.
+
+Use Node 24/TypeScript with SQLite, one source-isolated Yahoo database, a local read-only API and existing browser watchlist. Source: Yahoo Finance public chart endpoint, the same underlying service used by yfinance; direct Node integration avoids a Python runtime. Universe: NSE:RELIANCE / RELIANCE.NS / INR / NSI, verified against response metadata and official company filing. BSE is not active: the probe supplied only one observation. Do not relabel NSE data as BSE.
+
+Require at least 22 genuine daily sessions. Use Yahoo quote OHLC arrays without dividend-adjusting, repairing or interpolating; label provider-supplied prices as split-adjusted by Yahoo, not raw unadjusted exchange ticks. Ignore adjclose arrays. Validate company/symbol/exchange/currency/timezone, array lengths, timestamps, nulls and OHLC invariants. Exclude the current India date conservatively so an unfinished daily candle is never called EOD. Retain supplied historical special sessions and declare missing-session coverage unknown without an exchange calendar.
+
+Derive latest and previous close from the same series. Calendar ranges 1M/6M/1Y, genuine OHLC or explicit close-only line fallback, nullable fundamentals, date-only source precision, separate retrieval/refresh/cache status. Freshness unknown without a calendar, stale beyond seven calendar days. No fixture fallback in real mode; explicit demo stays separate, unsupported saved IDs removable.
+
+Yahoo is an unofficial best-effort internet source, not an exchange-licensed service or guaranteed entitlement. Local personal research only; no public redistribution claim, purchase or deployment. Fixed HTTPS host/path, public DNS addresses only, redirects disabled, 10-second timeout, at most one transient retry, persisted 20-request rolling-day ceiling and Retry-After/429 cooldown. Startup if empty, then weekday 19:00 Asia/Kolkata and budgeted operator refresh. No browser-action upstream calls.
+
+Reuse operator-verified original company evidence with exact URL, supported summary, nullable publication and actual retrieval. recent-disclosure-v1 uses the inclusive 30-day publication window in Asia/Kolkata; unknown dates and missing contrary evidence remain disclosed. Actual-source browser journey, restart/outage checks, deterministic offline CI, mobile 3-second performance target and source register are required before Phase 2 completion.
+
+Verification: `npm run build`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e -- --workers=4`, `npm run test:performance`, `npm run test:provider` (one actual acquisition), and `node --env-file-if-exists=.env scripts/trial.mjs` (reuse acquired data).
+
+## MVP backend scope · 1.4.0
+
+Universe: ten NSE large caps across seven sectors, fetched from the same Yahoo chart endpoint and each verified against response symbol, exchange (NSI), currency, timezone and exact company name: RELIANCE, TCS, INFY, HDFCBANK, ICICIBANK, HINDUNILVR, ITC, BHARTIARTL, LT, SUNPHARMA. A failed listing keeps its last good data and is reported individually; other listings still refresh.
+
+Evidence: Google News RSS search (`news.google.com/rss/search`, exact company name, last 30 days, India edition) per company, for personal non-commercial use as the feed terms state. Keep only headlines that name the company or an approved alias; deduplicate syndicated copies by normalized headline; keep publisher, Google News link, publication date (India) and retrieval time. No generated summary: headlines are shown as published, unclassified as reporting or opinion and not checked against article bodies. Curated official disclosures (RELIANCE) remain.
+
+Signals, versioned, deterministic, alphabetical results, never a forecast: `recent-disclosure-v1` (unchanged); `price-momentum-1m-v1` = latest close vs the last close on or before one calendar month earlier, qualifies at ≥ +5%; `news-coverage-7d-v1` = distinct company-matched headlines published in the 7 India calendar days ending today, qualifies at ≥ 3. Missing history yields no value and never qualifies.
+
+Requests: one chart and one news request per listing per refresh, sequential with a short pause; persisted shared budget 60 per rolling day (hard cap 100); per-host Retry-After/429 cooldown. Fixed allowlist: Yahoo chart paths for universe symbols only, and the Google News search path.
