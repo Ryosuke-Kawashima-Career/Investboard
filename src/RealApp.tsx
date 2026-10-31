@@ -1,5 +1,26 @@
-import { useEffect, useState } from "react";
-import { Bookmark, Leaf, Search, ArrowLeft, Info } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  BookOpen,
+  Bookmark,
+  Check,
+  ChevronRight,
+  Compass,
+  ExternalLink,
+  FileText,
+  Info,
+  Leaf,
+  Newspaper,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { HeroArt } from "./HeroArt";
 import { money } from "./data";
 import { summarizePeriod } from "./chart-data";
 import { StockChart, describeChange } from "./StockChart";
@@ -7,7 +28,12 @@ import { useWatchlist } from "./useWatchlist";
 import { SentimentPanel } from "./SentimentPanel";
 import { AgentChat } from "./AgentChat";
 import { realAgentContext } from "./agent";
-import { TONE_THRESHOLD, evaluateTone, headlineToneBundle } from "./tone";
+import {
+  TONE_THRESHOLD,
+  classifyHeadline,
+  evaluateTone,
+  headlineToneBundle,
+} from "./tone";
 import {
   loadCompany,
   loadResearch,
@@ -23,50 +49,77 @@ const SIGNAL_OPTIONS = [
 ];
 function Evidence({ e }: { e: RealListing["evidence"][number] }) {
   const news = e.type === "news-report";
+  const tone = news ? classifyHeadline(e.title) : null;
+  // Tone describes the headline wording only; it is never presented as an
+  // opportunity or risk claim about the company.
   return (
-    <article className="evidence-card">
+    <article
+      className={`panel evidence-card ${tone ? `tone-${tone}` : "disclosure"}`}
+    >
+      <span className="evidence-kind">
+        {news ? <Newspaper size={15} /> : <FileText size={15} />}{" "}
+        {news ? `${tone} tone` : "Official disclosure"}
+      </span>
       <h3>{e.title}</h3>
       {e.summary && <p>{e.summary}</p>}
-      <p className="small muted">
+      <div className="small muted">
         {e.publisher} · {news ? "News headline" : "Company disclosure"}
         {e.syndicatedCopies ? ` · ${e.syndicatedCopies} syndicated copies` : ""}
-      </p>
-      <p>
+        <br />
         Published: {e.publishedAt || "Unknown"} · Retrieved: {e.retrievedAt}
-      </p>
+      </div>
       {!!e.claimLocations.length && (
-        <p>Claim locations: {e.claimLocations.join("; ")}</p>
+        <p className="small">Claim locations: {e.claimLocations.join("; ")}</p>
       )}
-      <p className="small muted">{e.limitations}</p>
-      <a href={e.url} target="_blank" rel="noopener noreferrer">
-        {news ? "Open article via Google News" : "Open original disclosure"} ↗
+      <a
+        className="source-link"
+        href={e.url}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {news ? "Open article via Google News" : "Open original disclosure"}{" "}
+        <ExternalLink size={14} />
       </a>
+      <p className="evidence-disclaimer">{e.limitations}</p>
     </article>
   );
 }
-function Quote({ listing }: { listing: RealListing }) {
+const disclosures = (l: RealListing) =>
+  l.evidence.filter((e) => e.type === "company-disclosure");
+const headlines = (l: RealListing) =>
+  l.evidence.filter((e) => e.type === "news-report");
+const momentum = (l: RealListing) =>
+  l.signals.find((s) => s.version === "price-momentum-1m-v1");
+const percentText = (v: number | null) =>
+  v === null ? "Unavailable" : `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
+/** Short lowercase tile text, matching the demo's logo style. */
+const logoText = (l: RealListing) =>
+  (l.symbol.length <= 4 ? l.symbol : l.symbol.slice(0, 3)).toLowerCase();
+/** Demo-style price with direction text; missing values are never shown as zero. */
+function Price({
+  listing,
+  large = false,
+}: {
+  listing: RealListing;
+  large?: boolean;
+}) {
   const q = listing.quote,
     delta =
       q.price !== null && q.previousClose !== null
         ? q.price - q.previousClose
         : null;
   return (
-    <div className="price large">
+    <div className={`price ${large ? "large" : ""}`}>
       <strong>{q.price === null ? "Unavailable" : money(q.price)}</strong>
       {delta !== null && (
         <span className={delta >= 0 ? "up" : "down"}>
-          {delta >= 0 ? "Up" : "Down"} {money(Math.abs(delta))} (
+          {delta >= 0 ? "↗ Up" : "↘ Down"} {Math.abs(delta).toFixed(2)} (
           {q.previousClose
             ? ((Math.abs(delta) / q.previousClose) * 100).toFixed(2) + "%"
             : "percentage unavailable"}
           )
         </span>
       )}
-      <small>
-        {q.source} · End-of-day · {q.sourceDate || "No observation"} ·{" "}
-        {q.cacheStatus}
-      </small>
-      <small>Freshness: {q.freshness}. No verified exchange calendar.</small>
     </div>
   );
 }
@@ -130,6 +183,23 @@ export default function RealApp() {
     [period, setPeriod] = useState("6M"),
     [method, setMethod] = useState(false);
   const watchlist = useWatchlist(true);
+  const searchRef = useRef<HTMLInputElement>(null),
+    dialogRef = useRef<HTMLDialogElement>(null),
+    mainRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const handle = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, []);
+  useEffect(() => {
+    if (method) dialogRef.current?.showModal();
+    else dialogRef.current?.close();
+  }, [method]);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -194,17 +264,58 @@ export default function RealApp() {
     .sort((a, b) => a.name.localeCompare(b.name));
   const save = (l: RealListing) => (
     <button
-      className="icon-button save"
+      className={`icon-button save ${watchlist.ids.includes(l.id) ? "saved" : ""}`}
       aria-label={`${watchlist.ids.includes(l.id) ? "Remove" : "Save"} ${l.symbol} ${l.exchange}`}
       aria-pressed={watchlist.ids.includes(l.id)}
       onClick={() => watchlist.toggle(l.id)}
     >
       <Bookmark
-        size={19}
+        size={17}
         fill={watchlist.ids.includes(l.id) ? "currentColor" : "none"}
       />
     </button>
   );
+  function open(id: string) {
+    setSelected(id);
+    setPeriod("6M");
+    requestAnimationFrame(() => mainRef.current?.focus());
+  }
+  function navigate(next: string) {
+    setView(next);
+    setSelected(null);
+    setQuery("");
+    setSignalFilter("all");
+    setSector("All sectors");
+  }
+  // Alphabetical, never ordered by the size of the move.
+  const radar = listings
+    .filter((l) => momentum(l)?.qualifies)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 3);
+  const backLabel = view === "watchlist" ? "watchlist" : "discover";
+  const companyHeading = (l: RealListing) => (
+    <div className="company-heading">
+      <div className={`company-logo ${l.color}`}>{logoText(l)}</div>
+      <div>
+        <div className="eyebrow">
+          {l.exchange} : {l.symbol} <span>· {l.sector}</span>
+        </div>
+        <h1>{l.name}</h1>
+        <p>{l.description}</p>
+      </div>
+      <div className="heading-save">{save(l)}</div>
+    </div>
+  );
+  const backButton = (
+    <button className="back-button" onClick={() => setSelected(null)}>
+      <ArrowLeft size={16} /> Back to {backLabel}
+    </button>
+  );
+  const emptyKind = !listings.length
+    ? "unavailable"
+    : view === "watchlist" && !watchlist.ids.length
+      ? "fresh"
+      : "filtered";
   return (
     <div className="macos-app-shell">
       <a href="#main" className="skip-link">
@@ -212,9 +323,16 @@ export default function RealApp() {
       </a>
       <div className="macos-framed-canvas app-layout">
         <aside className="sidebar">
-          <a href="#" className="brand" onClick={() => setSelected(null)}>
+          <a
+            href="#"
+            className="brand"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("discover");
+            }}
+          >
             <span className="brand-mark">
-              <Leaf />
+              <Leaf size={23} />
             </span>
             <span className="brand-name">
               India
@@ -224,40 +342,55 @@ export default function RealApp() {
           </a>
           <div className="workspace-label">YOUR RESEARCH SPACE</div>
           <nav aria-label="Main navigation">
-            {["discover", "watchlist"].map((v) => (
-              <button
-                key={v}
-                className={`nav-item ${view === v ? "active" : ""}`}
-                onClick={() => {
-                  setView(v);
-                  setSelected(null);
-                  setQuery("");
-                  setSignalFilter("all");
-                  setSector("All sectors");
-                }}
-              >
-                {v === "discover" ? "Discover" : "Watchlist"}{" "}
-                {v === "watchlist" && watchlist.ids.length}
-              </button>
-            ))}
+            <button
+              className={`nav-item ${view === "discover" ? "active" : ""}`}
+              onClick={() => navigate("discover")}
+            >
+              <Compass size={18} />
+              Discover
+              <ChevronRight className="nav-chevron" size={15} />
+            </button>
+            <button
+              className={`nav-item ${view === "watchlist" ? "active" : ""}`}
+              onClick={() => navigate("watchlist")}
+            >
+              <Bookmark size={18} />
+              Watchlist<span className="nav-count">{watchlist.ids.length}</span>
+            </button>
           </nav>
           <div className="sidebar-note">
+            <div className="note-icon">
+              <BookOpen size={20} />
+            </div>
             <h3>Evidence before instinct.</h3>
-            <p>Observed prices, linked headlines and explicit coverage.</p>
-            <button className="text-button" onClick={() => setMethod(!method)}>
-              Our research approach
+            <p>
+              Observed prices, linked headlines and explicit coverage. Build
+              your own perspective.
+            </p>
+            <button className="text-button" onClick={() => setMethod(true)}>
+              Our research approach <ArrowUpRight size={14} />
             </button>
           </div>
-          <div className="sidebar-bottom">Real data · local research</div>
+          <div className="sidebar-bottom">
+            <span className="demo-dot real" /> Real data · local research
+          </div>
         </aside>
         <div className="workspace">
           <header className="topbar">
             <div className="breadcrumb">
-              Workspace / {picked?.symbol || view}
+              Workspace <ChevronRight size={13} />
+              <span>
+                {picked
+                  ? picked.symbol
+                  : view === "discover"
+                    ? "Discover"
+                    : "Watchlist"}
+              </span>
             </div>
             <div className="search-box">
               <Search size={17} />
               <input
+                ref={searchRef}
                 aria-label="Search companies or symbols"
                 placeholder="Search companies or symbols…"
                 maxLength={100}
@@ -267,186 +400,218 @@ export default function RealApp() {
                   setSelected(null);
                 }}
               />
+              <kbd className="macos-kbd">Ctrl K</kbd>
+              {query && (
+                <button
+                  className="icon-button"
+                  aria-label="Clear search"
+                  onClick={() => setQuery("")}
+                >
+                  <X size={15} />
+                </button>
+              )}
             </div>
-            <span className="demo-badge">REAL DATA</span>
+            <button
+              className="demo-badge real"
+              aria-label="About real data"
+              onClick={() => setMethod(true)}
+            >
+              REAL DATA
+            </button>
           </header>
-          <main id="main" tabIndex={-1}>
+          <main id="main" ref={mainRef} tabIndex={-1}>
             <div className="demo-notice">
               <Info size={14} />
               <span>
                 Local research trial · {listings.length} verified NSE listing(s)
                 · End-of-day observations, not a live feed.
               </span>
+              <button onClick={() => setMethod(true)}>
+                About this data <ArrowUpRight size={13} />
+              </button>
             </div>
             {watchlist.warning && (
               <p role="status" className="storage-warning">
+                <AlertTriangle size={16} />
                 {watchlist.warning}
               </p>
             )}
-            {method && (
-              <section className="chart-panel">
-                <h2>Research approach</h2>
-                <p>
-                  price-momentum-1m-v1 compares the latest close with the last
-                  close on or before one calendar month earlier; it qualifies at
-                  +5% or more. Past movement only, never a forecast.
-                </p>
-                <p>
-                  news-coverage-7d-v1 counts distinct headlines naming the
-                  company, published in the last 7 calendar days (Google News
-                  search); it qualifies at 3 or more. It measures attention, not
-                  sentiment: coverage may be negative or opinion.
-                </p>
-                <p>
-                  recent-disclosure-v1 includes verified official company
-                  disclosures published within 30 calendar days in Asia/Kolkata,
-                  including today. Unknown or future dates never qualify.
-                  Companies are alphabetical, with no forecast or ranking.
-                </p>
-                <p>
-                  Headlines are shown as published, without summaries, and are
-                  not checked against article bodies. P/E, market cap and growth
-                  are unavailable until separately sourced.
-                </p>
-                <button onClick={() => setMethod(false)}>
-                  Close research approach
-                </button>
-              </section>
-            )}
-            {loading && <p role="status">Loading research…</p>}
             {error && (
               <div role="alert" className="storage-warning">
-                Research API unavailable.{" "}
-                {result
-                  ? "Last loaded observations remain visible."
-                  : "No cached response is available in this browser."}
-                <button onClick={() => setRevision((r) => r + 1)}>Retry</button>
+                <AlertTriangle size={16} />
+                <span>
+                  Research API unavailable.{" "}
+                  {result
+                    ? "Last loaded observations remain visible."
+                    : "No cached response is available in this browser."}
+                </span>
+                <button
+                  className="secondary-button"
+                  onClick={() => setRevision((r) => r + 1)}
+                >
+                  Retry
+                </button>
               </div>
             )}
             {result?.meta.error && (
               <p role="status" className="storage-warning">
-                Price refresh is unavailable.{" "}
-                {result.meta.error.code === "PROVIDER_LIMIT_OR_ENTITLEMENT"
-                  ? "Yahoo Finance reported a request limit or access restriction. "
-                  : "The market source could not supply data. "}
-                {result.meta.error.failedListings?.length
-                  ? `Affected: ${result.meta.error.failedListings.join(", ")}. `
-                  : ""}
-                {listings.some((l) => l.history.length)
-                  ? "Last good observations are retained."
-                  : "No stored price observations are available."}
+                <Info size={15} />
+                <span>
+                  Price refresh is unavailable.{" "}
+                  {result.meta.error.code === "PROVIDER_LIMIT_OR_ENTITLEMENT"
+                    ? "Yahoo Finance reported a request limit or access restriction. "
+                    : "The market source could not supply data. "}
+                  {result.meta.error.failedListings?.length
+                    ? `Affected: ${result.meta.error.failedListings.join(", ")}. `
+                    : ""}
+                  {listings.some((l) => l.history.length)
+                    ? "Last good observations are retained."
+                    : "No stored price observations are available."}
+                </span>
               </p>
             )}
             {picked && !listing ? (
-              <section
-                className="chart-panel detail-loading"
-                aria-live="polite"
-              >
-                <button
-                  className="text-button"
-                  onClick={() => setSelected(null)}
-                >
-                  <ArrowLeft size={16} /> Back to companies
-                </button>
-                <h1>{picked.name}</h1>
-                {full?.error ? (
-                  <>
-                    <p>
-                      Full history and headlines could not be loaded. Nothing is
-                      shown in their place.
-                    </p>
-                    <button
-                      className="secondary-button"
-                      onClick={() => setDetailRevision((n) => n + 1)}
-                    >
-                      Retry
-                    </button>
-                  </>
-                ) : (
-                  <p>Loading full history and headlines…</p>
-                )}
-              </section>
+              <>
+                {backButton}
+                {companyHeading(picked)}
+                <section className="detail-loading" aria-live="polite">
+                  {full?.error ? (
+                    <div className="empty-state">
+                      <AlertTriangle size={27} />
+                      <h3>Full history and headlines could not be loaded</h3>
+                      <p>Nothing is shown in their place.</p>
+                      <button
+                        className="secondary-button"
+                        onClick={() => setDetailRevision((n) => n + 1)}
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <span className="loading-spinner" />
+                      <h3>Loading full history and headlines…</h3>
+                    </div>
+                  )}
+                </section>
+              </>
             ) : listing ? (
               <>
-                <button
-                  className="text-button"
-                  onClick={() => setSelected(null)}
-                >
-                  <ArrowLeft size={16} /> Back to companies
-                </button>
-                <section className="detail-header">
-                  <div>
-                    <div className="eyebrow">
-                      {listing.exchange} · {listing.symbol} · INR
+                {backButton}
+                {companyHeading(listing)}
+                <div className="detail-grid">
+                  <section className="panel quote-panel">
+                    <div className="section-top">
+                      <div>
+                        <div className="eyebrow">OBSERVED QUOTE · INR</div>
+                        <Price listing={listing} large />
+                      </div>
+                      <span className="subtle-badge">
+                        End-of-day ·{" "}
+                        {listing.quote.sourceDate || "no observation"}
+                      </span>
                     </div>
-                    <h1>{listing.name}</h1>
-                    <p>{listing.description}</p>
-                  </div>
-                  {save(listing)}
-                </section>
-                <Quote listing={listing} />
-                <p className="small muted">
-                  Retrieved: {listing.quote.fetchedTimestamp || "Never"} · Last
-                  attempt: {result?.meta.lastAttemptedRefresh || "Never"}
-                </p>
-                <section className="chart-panel">
-                  <div className="section-heading">
-                    <h2>Price history</h2>
-                    <div className="macos-segmented-track">
-                      {["1M", "6M", "1Y"].map((p) => (
-                        <button
-                          className="macos-segmented-btn"
-                          key={p}
-                          aria-pressed={period === p}
-                          onClick={() => setPeriod(p)}
-                        >
-                          {p}
-                        </button>
-                      ))}
+                    <p className="muted small">
+                      Source: {listing.quote.source} ·{" "}
+                      {listing.quote.cacheStatus} · Freshness:{" "}
+                      {listing.quote.freshness}. No verified exchange calendar.
+                      <br />
+                      Retrieved: {listing.quote.fetchedTimestamp || "Never"} ·
+                      Last attempt:{" "}
+                      {result?.meta.lastAttemptedRefresh || "Never"}
+                    </p>
+                    <div className="chart-toolbar">
+                      <h3>Price history</h3>
+                      <div
+                        className="macos-segmented-track"
+                        aria-label="History period"
+                      >
+                        {["1M", "6M", "1Y"].map((p) => (
+                          <button
+                            key={p}
+                            aria-pressed={period === p}
+                            className={`macos-segmented-btn ${period === p ? "active" : ""}`}
+                            onClick={() => setPeriod(p)}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <StockChart
-                    listing={listing}
-                    period={period}
-                    real
-                    rangeFrom={from}
-                    rangeTo={today}
-                  />
-                  <p className="small muted">
-                    Requested {from} – {today}. Available{" "}
-                    {listing.history[0]?.date || "none"} –{" "}
-                    {listing.history.at(-1)?.date || "none"} (
-                    {listing.history.length} observed sessions).{" "}
-                    {listing.history[0]?.date > from
-                      ? "Partial history for this range."
-                      : "Coverage uncertain without an exchange calendar."}{" "}
-                    No gap filling. Yahoo prices are split-adjusted, not
-                    dividend-adjusted; corporate actions.
-                  </p>
-                </section>
-                <section className="chart-panel">
-                  <h2>Company details</h2>
-                  <p>
-                    Sector: {listing.sector} · P/E: Unavailable · Market cap:
-                    Unavailable · Revenue growth: Unavailable
-                  </p>
-                  {listing.signals.map((s) => (
-                    <div key={s.version}>
+                    <StockChart
+                      listing={listing}
+                      period={period}
+                      real
+                      rangeFrom={from}
+                      rangeTo={today}
+                    />
+                    <p className="small muted coverage-note">
+                      Requested {from} – {today}. Available{" "}
+                      {listing.history[0]?.date || "none"} –{" "}
+                      {listing.history.at(-1)?.date || "none"} (
+                      {listing.history.length} observed sessions).{" "}
+                      {listing.history[0]?.date > from
+                        ? "Partial history for this range."
+                        : "Coverage uncertain without an exchange calendar."}{" "}
+                      No gap filling. Yahoo prices are split-adjusted, not
+                      dividend-adjusted.
+                    </p>
+                  </section>
+                  <section className="panel fundamentals">
+                    <div className="eyebrow">THE BUSINESS AT A GLANCE</div>
+                    <h2>Company snapshot</h2>
+                    <dl>
+                      <div>
+                        <dt>Sector</dt>
+                        <dd>{listing.sector}</dd>
+                      </div>
+                      <div>
+                        <dt>Market capitalization</dt>
+                        <dd>Unavailable</dd>
+                      </div>
+                      <div>
+                        <dt>P/E ratio</dt>
+                        <dd>Unavailable</dd>
+                      </div>
+                      <div>
+                        <dt>1-month price change</dt>
+                        <dd>{percentText(momentum(listing)?.value ?? null)}</dd>
+                      </div>
+                    </dl>
+                    <p className="small muted">
+                      Fundamentals are not yet sourced, so they are shown as
+                      unavailable rather than estimated.
+                    </p>
+                    <button
+                      className="source-link text-button"
+                      onClick={() => setMethod(true)}
+                    >
+                      Explain discovery signal <ArrowUpRight size={14} />
+                    </button>
+                  </section>
+                </div>
+                {listing.signals.map((s) => (
+                  <section
+                    className={`panel signal-panel ${s.qualifies ? "" : "quiet"}`}
+                    key={s.version}
+                  >
+                    <div className="signal-icon">
+                      <Sparkles size={19} />
+                    </div>
+                    <div>
+                      <div className="eyebrow">
+                        {s.qualifies ? "WHY IT APPEARS" : "SIGNAL"} ·{" "}
+                        {s.version}
+                      </div>
                       <h3>{signalSummary(s)}</h3>
                       <p>{s.definition}</p>
-                      <p className="small muted">
-                        {s.version} · {s.period} · Source: {s.source} ·{" "}
+                      <span className="small muted">
+                        Period: {s.period} · Source: {s.source} ·{" "}
                         {s.qualifies ? "Qualifies" : "Does not qualify"}
-                      </p>
+                      </span>
                     </div>
-                  ))}
-                  <button
-                    className="secondary-button"
-                    onClick={() => setMethod(true)}
-                  >
-                    Explain discovery signal
-                  </button>
-                </section>
+                  </section>
+                ))}
                 <SentimentPanel
                   key={listing.id}
                   bundle={headlineToneBundle(
@@ -462,68 +627,208 @@ export default function RealApp() {
                   ctx={realAgentContext(listing, today)}
                   symbol={listing.symbol}
                 />
-                <section className="chart-panel">
-                  <h2>Original disclosures</h2>
-                  {!listing.evidence.some(
-                    (e) => e.type === "company-disclosure",
-                  ) && <p>No verified disclosure is available.</p>}
-                  {listing.evidence
-                    .filter((e) => e.type === "company-disclosure")
-                    .map((e) => (
+                <div className="section-top evidence-heading">
+                  <div>
+                    <h2>Original disclosures</h2>
+                    <p>Company filings, linked to the original document.</p>
+                  </div>
+                  <span className="subtle-badge">
+                    {disclosures(listing).length} verified
+                  </span>
+                </div>
+                {disclosures(listing).length ? (
+                  <div className="evidence-grid">
+                    {disclosures(listing).map((e) => (
                       <Evidence key={e.id} e={e} />
                     ))}
-                </section>
-                <section className="chart-panel">
-                  <h2>Recent news headlines</h2>
-                  <p className="small muted">
-                    Google News search, last 30 days · Retrieved{" "}
-                    {listing.newsRetrievedAt || "never"}
-                    {listing.newsError
-                      ? " · Latest news refresh failed; older headlines may be shown"
-                      : ""}
-                    . Positive, negative and opinion coverage are not separated.
+                  </div>
+                ) : (
+                  <p className="muted evidence-empty">
+                    No verified disclosure is available.
                   </p>
-                  {!listing.evidence.some((e) => e.type === "news-report") && (
-                    <p>No company-matched headlines are available.</p>
-                  )}
-                  {listing.evidence
-                    .filter((e) => e.type === "news-report")
-                    .map((e) => (
+                )}
+                <div className="section-top evidence-heading">
+                  <div>
+                    <h2>Recent news headlines</h2>
+                    <p>
+                      Google News search, last 30 days · Retrieved{" "}
+                      {listing.newsRetrievedAt || "never"}
+                      {listing.newsError
+                        ? " · Latest news refresh failed; older headlines may be shown"
+                        : ""}
+                      . Tone labels come from word lists, not the articles.
+                    </p>
+                  </div>
+                  <span className="subtle-badge">
+                    {headlines(listing).length} headlines
+                  </span>
+                </div>
+                {headlines(listing).length ? (
+                  <div className="evidence-grid">
+                    {headlines(listing).map((e) => (
                       <Evidence key={e.id} e={e} />
                     ))}
-                </section>
+                  </div>
+                ) : (
+                  <p className="muted evidence-empty">
+                    No company-matched headlines are available.
+                  </p>
+                )}
               </>
             ) : (
               <>
-                <section className="page-heading">
-                  <div className="eyebrow">INDEPENDENT EQUITY RESEARCH</div>
-                  <h1>
-                    {view === "watchlist"
-                      ? "Your watchlist"
-                      : "Explore Indian businesses."}
-                  </h1>
-                  <p>
-                    Verified listing coverage and source-linked observations.
-                  </p>
-                </section>
-                {view === "watchlist" && (
-                  <button
-                    className="secondary-button"
-                    onClick={watchlist.clear}
-                  >
-                    Clear watchlist
-                  </button>
-                )}
-                <section className="universe-section">
-                  <div className="section-heading">
-                    <h2>
+                <div className="page-heading">
+                  <div>
+                    <div className="eyebrow">
+                      INDIAN EQUITIES, A CLEARER PERSPECTIVE
+                    </div>
+                    <h1>
                       {view === "watchlist"
-                        ? "Saved listings"
-                        : "Explore the universe"}{" "}
-                      <span className="result-count">{filtered.length}</span>
-                    </h2>
-                    <label>
-                      Discovery signal{" "}
+                        ? "Your research, together."
+                        : "Find your next question."}
+                    </h1>
+                    <p>
+                      {view === "watchlist"
+                        ? "A little less noise. A closer look at the companies you save."
+                        : "Discover businesses. Follow the evidence. Think independently."}
+                    </p>
+                  </div>
+                  {view === "watchlist" && watchlist.ids.length > 0 && (
+                    <button
+                      className="secondary-button"
+                      onClick={watchlist.clear}
+                    >
+                      <X size={15} /> Clear watchlist
+                    </button>
+                  )}
+                </div>
+                {view === "discover" && !query && listings.length > 0 && (
+                  <>
+                    <section className="hero">
+                      <div className="hero-copy">
+                        <span className="eyebrow">
+                          <span className="tiny-line" /> A THOUGHTFUL PLACE TO
+                          START
+                        </span>
+                        <h2>
+                          Good research grows
+                          <br />
+                          from a wider perspective.
+                        </h2>
+                        <p>
+                          Look beyond the price. Explore what drives a business,
+                          <br className="desktop-break" /> and what might
+                          challenge it.
+                        </p>
+                        <button
+                          className="hero-button"
+                          onClick={() =>
+                            document
+                              .getElementById("company-list")
+                              ?.scrollIntoView({ behavior: "smooth" })
+                          }
+                        >
+                          Explore companies <ArrowRight size={16} />
+                        </button>
+                      </div>
+                      <HeroArt />
+                      <div className="hero-foot">
+                        <span>
+                          <Check size={13} /> Observed end-of-day prices
+                        </span>
+                        <span>
+                          <Check size={13} /> Linked headlines and their tone
+                        </span>
+                        <span>
+                          <Check size={13} /> No stock tips. Just context.
+                        </span>
+                      </div>
+                    </section>
+                    {radar.length > 0 && (
+                      <section className="featured-section">
+                        <div className="section-top">
+                          <div className="inline-heading">
+                            <Sparkles size={17} />
+                            <h2>On the research radar</h2>
+                            <span className="subtle-badge">
+                              1-month price change ≥ +5%
+                            </span>
+                          </div>
+                          <button
+                            className="text-button"
+                            onClick={() => setMethod(true)}
+                          >
+                            How discovery works <ArrowUpRight size={14} />
+                          </button>
+                        </div>
+                        <div className="featured-grid">
+                          {radar.map((l) => (
+                            <article className="company-card" key={l.id}>
+                              <div className="card-top">
+                                <div className={`company-logo ${l.color}`}>
+                                  {logoText(l)}
+                                </div>
+                                <div>
+                                  <button
+                                    className="company-name"
+                                    aria-label={`Open ${l.symbol} from the research radar`}
+                                    onClick={() => open(l.id)}
+                                  >
+                                    {l.name}
+                                  </button>
+                                  <div className="small muted">
+                                    {l.symbol}{" "}
+                                    <span className="dot-separator">·</span>{" "}
+                                    {l.exchange}
+                                  </div>
+                                </div>
+                                {save(l)}
+                              </div>
+                              <Price listing={l} />
+                              <ObservedSparkline listing={l} today={today} />
+                              <button
+                                className="signal-strip"
+                                aria-label={`Why ${l.symbol} appears`}
+                                onClick={() => open(l.id)}
+                              >
+                                <span>
+                                  <BarChart3 size={14} /> 1-month change{" "}
+                                  <strong>
+                                    {percentText(momentum(l)?.value ?? null)}
+                                  </strong>
+                                </span>
+                                <ArrowUpRight size={14} />
+                              </button>
+                              <div className="card-foot">
+                                <span>{l.sector}</span>
+                                <span>EOD · {l.quote.sourceDate || "—"}</span>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+                <section id="company-list" className="universe">
+                  <div className="section-top">
+                    <div>
+                      <h2>
+                        {view === "watchlist"
+                          ? "Saved companies"
+                          : query
+                            ? "Search results"
+                            : "Explore the universe"}{" "}
+                        <span className="result-count">{filtered.length}</span>
+                      </h2>
+                      <p>
+                        {view === "watchlist"
+                          ? "Stored on this browser only. Add, remove or clear at any time."
+                          : `${listings.length} verified NSE listings · End-of-day observations · Not the full market`}
+                      </p>
+                    </div>
+                    <label className="signal-select">
+                      <SlidersHorizontal size={14} />
                       <select
                         aria-label="Discovery signal"
                         value={signalFilter}
@@ -538,13 +843,13 @@ export default function RealApp() {
                       </select>
                     </label>
                   </div>
-                  <div className="filter-row">
+                  <div className="filter-row" aria-label="Sector filters">
                     {[
                       "All sectors",
                       ...[...new Set(listings.map((l) => l.sector))].sort(),
                     ].map((s) => (
                       <button
-                        className="filter-chip"
+                        className={`filter-chip ${sector === s ? "active" : ""}`}
                         key={s}
                         aria-pressed={sector === s}
                         onClick={() => setSector(s)}
@@ -552,6 +857,127 @@ export default function RealApp() {
                         {s}
                       </button>
                     ))}
+                  </div>
+                  <div aria-live="polite">
+                    {loading && !result ? (
+                      <div className="empty-state" role="status">
+                        <span className="loading-spinner" />
+                        <h3>Loading research…</h3>
+                      </div>
+                    ) : filtered.length ? (
+                      <div className="company-table">
+                        <div className="table-header">
+                          <span>COMPANY / EXCHANGE</span>
+                          <span>SECTOR</span>
+                          <span>PRICE & DAILY CHANGE</span>
+                          <span>LAST MONTH</span>
+                          <span>SAVE</span>
+                        </div>
+                        {filtered.map((l) => (
+                          <div className="table-row" key={l.id}>
+                            <div className="table-company">
+                              <div
+                                className={`company-logo small-logo ${l.color}`}
+                              >
+                                {logoText(l)}
+                              </div>
+                              <div>
+                                <button
+                                  className="company-name"
+                                  onClick={() => open(l.id)}
+                                >
+                                  {l.name}
+                                </button>
+                                <div className="small muted">
+                                  {l.symbol} · {l.exchange}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="table-sector">{l.sector}</span>
+                            <div>
+                              <Price listing={l} />
+                              <span className="table-freshness">
+                                EOD · {l.quote.sourceDate || "No observation"}
+                              </span>
+                            </div>
+                            <div className="table-trend">
+                              <ObservedSparkline listing={l} today={today} />
+                            </div>
+                            {save(l)}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      !loading && (
+                        <div className="empty-state">
+                          <Search size={28} />
+                          <h3>
+                            {emptyKind === "unavailable"
+                              ? "Market data unavailable"
+                              : emptyKind === "fresh"
+                                ? "A fresh page for your research"
+                                : "No companies match these filters"}
+                          </h3>
+                          <p>
+                            {emptyKind === "unavailable"
+                              ? "The local backend needs a verified listing and successful source acquisition. No substitute prices are shown."
+                              : emptyKind === "fresh"
+                                ? "Save a listing with its bookmark button to find it here."
+                                : "No listing qualifies for the selected signal and filters. Missing data never qualifies."}
+                          </p>
+                          <button
+                            className="secondary-button"
+                            onClick={() => {
+                              if (emptyKind === "unavailable")
+                                setRevision((r) => r + 1);
+                              else if (emptyKind === "fresh")
+                                navigate("discover");
+                              else {
+                                setQuery("");
+                                setSector("All sectors");
+                                setSignalFilter("all");
+                              }
+                            }}
+                          >
+                            {emptyKind === "unavailable"
+                              ? "Retry"
+                              : emptyKind === "fresh"
+                                ? "Discover companies"
+                                : "Reset filters"}
+                          </button>
+                        </div>
+                      )
+                    )}
+                    {view === "watchlist" &&
+                      watchlist.ids
+                        .filter((id) => !listings.some((l) => l.id === id))
+                        .map((id) => (
+                          <div className="table-row unsupported-row" key={id}>
+                            <div className="table-company">
+                              <div className="company-logo small-logo">?</div>
+                              <div>
+                                <strong>{id}</strong>
+                                <div className="small muted">
+                                  Unavailable: listing is outside verified
+                                  coverage.
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              className="secondary-button"
+                              onClick={() => watchlist.toggle(id)}
+                            >
+                              Remove {id}
+                            </button>
+                          </div>
+                        ))}
+                  </div>
+                  <div className="table-caption">
+                    <Info size={13} />
+                    <span>
+                      Alphabetical order. Signals are research prompts, not
+                      rankings or return forecasts.
+                    </span>
                     <button
                       className="text-button"
                       onClick={() => setMethod(true)}
@@ -559,82 +985,82 @@ export default function RealApp() {
                       Explain discovery signal
                     </button>
                   </div>
-                  {filtered.map((l) => (
-                    <article className="chart-panel" key={l.id}>
-                      <div className="section-heading">
-                        <div>
-                          <button
-                            className="company-name"
-                            onClick={() => {
-                              setSelected(l.id);
-                              setPeriod("6M");
-                            }}
-                          >
-                            {l.name}
-                          </button>
-                          <p>
-                            {l.symbol} · {l.exchange} · {l.sector}
-                          </p>
-                        </div>
-                        {save(l)}
-                      </div>
-                      <Quote listing={l} />
-                      <ObservedSparkline listing={l} today={today} />
-                      <p>
-                        {l.signals
-                          .filter((s) => s.unit !== "flag" || s.qualifies)
-                          .map(signalSummary)
-                          .join(" · ")}{" "}
-                        · P/E and growth unavailable
-                      </p>
-                    </article>
-                  ))}
-                  {!loading && !filtered.length && (
-                    <div className="empty-state">
-                      <h3>
-                        {listings.length
-                          ? "No companies match these filters"
-                          : "Market data unavailable"}
-                      </h3>
-                      <p>
-                        {listings.length
-                          ? "No listing qualifies for the selected signal and filters. Missing data never qualifies."
-                          : "The local backend needs a verified listing and successful source acquisition. No substitute prices are shown."}
-                      </p>
-                      <button
-                        className="secondary-button"
-                        onClick={() => setRevision((r) => r + 1)}
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                  {view === "watchlist" &&
-                    watchlist.ids
-                      .filter((id) => !listings.some((l) => l.id === id))
-                      .map((id) => (
-                        <article className="chart-panel" key={id}>
-                          <h3>{id}</h3>
-                          <p>
-                            Unavailable: listing is outside verified coverage.
-                          </p>
-                          <button onClick={() => watchlist.toggle(id)}>
-                            Remove {id}
-                          </button>
-                        </article>
-                      ))}
                 </section>
               </>
             )}
             <footer>
               <span>
-                Research, not investment advice. Returns are never guaranteed.
+                <Leaf size={14} /> Made for independent thinking.
               </span>
-              <span>Watchlists stay on this browser.</span>
+              <span>
+                Research, not investment advice. Returns are never guaranteed.
+                Watchlists stay on this browser.
+              </span>
             </footer>
           </main>
         </div>
       </div>
+      <dialog
+        ref={dialogRef}
+        className="methodology-dialog"
+        onCancel={() => setMethod(false)}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setMethod(false);
+        }}
+      >
+        <div className="dialog-top">
+          <span className="brand-mark">
+            <Leaf size={22} />
+          </span>
+          <button
+            className="icon-button"
+            aria-label="Close research approach"
+            onClick={() => setMethod(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <div className="eyebrow">OUR RESEARCH APPROACH</div>
+        <h2>Context over conviction.</h2>
+        <p>
+          India Forward helps you ask better questions about Indian businesses.
+          Discovery is a starting point for independent research, not a buy or
+          sell recommendation.
+        </p>
+        <h3>Explainable signals</h3>
+        <p>
+          price-momentum-1m-v1 compares the latest close with the last close on
+          or before one calendar month earlier; it qualifies at +5% or more.
+          Past movement only, never a forecast.
+        </p>
+        <p>
+          news-coverage-7d-v1 counts distinct headlines naming the company,
+          published in the last 7 calendar days (Google News search); it
+          qualifies at 3 or more. It measures attention, not sentiment: coverage
+          may be negative or opinion.
+        </p>
+        <p>
+          recent-disclosure-v1 includes verified official company disclosures
+          published within 30 calendar days in Asia/Kolkata, including today.
+          Unknown or future dates never qualify. Companies are alphabetical,
+          with no forecast or ranking.
+        </p>
+        <h3>Sources and limits</h3>
+        <p>
+          {listings.length} verified NSE listings with Yahoo Finance end-of-day
+          prices (split-adjusted, not dividend-adjusted). Headlines are shown as
+          published, without summaries, and are not checked against article
+          bodies. P/E, market cap and growth are unavailable until separately
+          sourced.
+        </p>
+        <p className="small muted">
+          Watchlists stay on this browser. There are no accounts or brokerage
+          connections.
+        </p>
+        <button className="primary-button" onClick={() => setMethod(false)}>
+          Back to research <ArrowRight size={15} />
+        </button>
+      </dialog>
     </div>
   );
 }

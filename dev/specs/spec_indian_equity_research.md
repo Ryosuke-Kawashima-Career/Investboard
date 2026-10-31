@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.8.0"
+version: "1.9.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -94,6 +94,7 @@ Measure task success during usability review: can a participant find a company, 
 | 1.6.0 | 2026-10-31 | Added REQ-11 social attention/sentiment and REQ-12 research agent with trust, permission and evaluation gates | User trust and sentiment-analysis request | In Progress |
 | 1.7.0 | 2026-10-31 | Real-data MVP: Google News headline tone added as a REQ-11 source (already permitted), provisional news minimum sample, in-app labeled evaluation; rule-based REQ-12 agent over real stored data | User real-data MVP request (chose headline tone and a scripted agent) | In Progress |
 | 1.8.0 | 2026-10-31 | Universe expanded from 10 to 50 NSE large caps; request budget sized for one full refresh; compact list API with per-company detail to keep the 3-second target | User request for more companies to research | In Progress |
+| 1.9.0 | 2026-10-31 | Real-data interface matches the demo layout and macOS light styling | User request for visual parity with the demo | In Progress |
 
 ## Replacement backend contract · 1.3.0
 
@@ -164,4 +165,8 @@ Universe: 50 NSE large caps across banking, financial services, insurance, IT, c
 Requests: one chart and one news request per listing per refresh, making 100 per full refresh. Default persisted budget 220 per rolling day (one full refresh plus retries and one operator refresh), hard cap 250. The refresh schedule, pause, cooldowns and allowlist are unchanged, and the allowlist now includes the 50 chart symbols.
 
 Payload: `/api/companies` returns compact summaries (identity, quote, signals, last calendar month of OHLC for sparklines, no evidence, `detail: "summary"`). `/api/companies/{companyId}` returns the full listing with history and evidence, loaded when a company page opens. If that load fails, the page says so with a retry and never shows the summary's one-month history as the full range. Verification: unit and integration tests for universe size and uniqueness, the budget and the summary/detail split; a browser journey for the detail load; one real acquisition; and the 3-second cached-view target.
+
+## Real-data visual parity · 1.9.0
+
+The real-data interface uses the demo's layout and components: a sidebar with icons and a watchlist count; a topbar with breadcrumb, search with a working Ctrl/⌘ K shortcut, and a data badge that opens the research approach; a hero; a "research radar" of up to three cards for listings that qualify for `price-momentum-1m-v1` (alphabetical, never by size of return); a company table with logo tiles, price and daily change, and the last-month observed sparkline; a detail page with quote and chart panel, company snapshot, one signal panel per signal, and disclosure and headline evidence cards; and the research approach as a modal dialog. Everything shown is wired to real data or a real action. Values that are not sourced stay "Unavailable". Headline cards are labeled with their headline tone, never as opportunity or risk claims, and real mode never shows the word "synthetic".
 

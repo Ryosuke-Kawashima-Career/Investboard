@@ -1937,3 +1937,37 @@ dd {
 .eval-matrix th, .eval-matrix td { padding:4px 8px; border-bottom:1px solid var(--macos-border-subtle); text-align:right; white-space:nowrap; }
 .eval-matrix th[scope="row"], .eval-matrix thead th:first-child { text-align:left; color:var(--macos-text-secondary); font-weight:500; }
 .eval-matrix td.diag { font-weight:700; color:var(--macos-text-primary); background:rgba(52,199,89,.1); }
+
+/* spec 1.9.0 real-data parity with the demo layout */
+.company-logo.green { background:#e9f3e6; color:#4f7d4a; }
+.company-logo.orange { background:#faf1da; color:#9a7a26; }
+.company-logo.red { background:#fcf0e9; color:#b3765d; }
+.company-logo.pink { background:#f8ebf0; color:#a35d7a; }
+.company-logo { text-transform:lowercase; }
+.demo-dot.real { background:var(--macos-accent-green); box-shadow:0 0 0 3px rgba(52,199,89,.15); }
+.demo-badge.real { color:#2f6b45; background:#e9f4ec; border-color:#cfe6d6; cursor:pointer; transition:transform var(--macos-duration-fast) var(--macos-ease-spring); }
+.demo-badge.real:active { transform:scale(.97); }
+.table-trend { min-width:0; }
+.table-trend .observed-sparkline { height:30px; margin:0 0 4px; }
+.table-trend figcaption { font-size:9px; line-height:1.35; }
+.company-card .observed-sparkline { height:56px; }
+.company-card figcaption { font-size:9px; margin-bottom:12px; }
+.table-caption .text-button { margin-left:auto; font-size:9px; }
+.signal-panel.quiet { background:var(--macos-bg-canvas); }
+.signal-panel.quiet .signal-icon { background:var(--macos-surface-track); color:var(--macos-text-tertiary); }
+.signal-panel + .signal-panel { margin-top:12px; }
+.evidence-card.tone-negative .evidence-kind { color:#a17e4e; }
+.evidence-card.tone-mixed .evidence-kind, .evidence-card.tone-neutral .evidence-kind, .evidence-card.tone-unclassifiable .evidence-kind { color:var(--macos-text-secondary); }
+.evidence-kind { text-transform:capitalize; }
+.evidence-card .source-link { margin-top:10px; }
+.evidence-empty { margin:4px 0 24px; font-size:12px; }
+.coverage-note { margin-top:10px; line-height:1.6; }
+.unsupported-row { grid-template-columns:minmax(0,1fr) auto; }
+.detail-loading { margin-top:20px; }
+.storage-warning .secondary-button { margin-left:auto; }
+@media (max-width: 900px) {
+  .table-header > span:nth-child(4) { display:none; }
+  .table-trend { grid-column:1 / -1; order:10; display:block; }
+  .table-trend .observed-sparkline { height:28px; }
+  .table-trend figcaption { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+}
