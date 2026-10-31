@@ -1,7 +1,18 @@
 /** Accessible OHLC chart with calendar aggregation and a close-only line view. */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { aggregateHistory } from "./chart-data";
+import { aggregateHistory, summarizePeriod } from "./chart-data";
 import { money, type Listing } from "./data";
+/** Direction stated in words, so meaning never depends on colour alone. */
+export function describeChange(change: number, percent: number | null) {
+  const word = change > 0 ? "Up" : change < 0 ? "Down" : "Unchanged";
+  const pct =
+    percent === null
+      ? "percentage unavailable"
+      : `${percent >= 0 ? "+" : "−"}${Math.abs(percent).toFixed(2)}%`;
+  return `${word} ${money(Math.abs(change))} (${pct})`;
+}
+const tone = (change: number) =>
+  change > 0 ? "up" : change < 0 ? "down" : "";
 export function StockChart({
   listing,
   period,
@@ -15,16 +26,29 @@ export function StockChart({
   rangeTo?: string;
   period: string;
 }) {
-  const [mode, setMode] = useState<"Candles" | "Line">("Candles");
-  useEffect(() => {
-    if (
+  // Twelve monthly candles hide the trend, so 1Y opens on the daily line.
+  // Derived during render (not in an effect) so the default never flashes.
+  const closeOnly = useMemo(
+    () =>
       listing.history.some(
         (p) =>
           p.open === undefined || p.high === undefined || p.low === undefined,
-      )
-    )
-      setMode("Line");
-  }, [listing]);
+      ),
+    [listing],
+  );
+  const modeKey = `${listing.id}|${period}`;
+  const [choice, setChoice] = useState<{
+    key: string;
+    mode: "Candles" | "Line";
+  } | null>(null);
+  const mode =
+    choice?.key === modeKey
+      ? choice.mode
+      : period === "1Y" || closeOnly
+        ? "Line"
+        : "Candles";
+  const setMode = (value: "Candles" | "Line") =>
+    setChoice({ key: modeKey, mode: value });
   const [cursor, setCursor] = useState<number | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
   const [chartWidth, setChartWidth] = useState(760);
@@ -54,6 +78,7 @@ export function StockChart({
         : points.map((p) => ({ ...p, endDate: p.date })),
     [points, period, mode],
   );
+  const summary = useMemo(() => summarizePeriod(points), [points]);
   useEffect(() => setCursor(null), [listing.id, period, mode]);
   const activeIndex = Math.max(
     0,
@@ -77,20 +102,23 @@ export function StockChart({
         Price history is unavailable for this period.
       </p>
     );
+  // Range includes the summary high/low so markers stay on the plot in Line mode.
   const low =
     Math.min(
       ...bars.map((p) => (mode === "Candles" ? (p.low ?? p.close) : p.close)),
+      summary?.low.value ?? Infinity,
     ) * 0.995;
   const high =
     Math.max(
       ...bars.map((p) => (mode === "Candles" ? (p.high ?? p.close) : p.close)),
+      summary?.high.value ?? -Infinity,
     ) * 1.005;
   const width = chartWidth,
-    height = 260,
+    height = 270,
     left = width < 400 ? 43 : 58,
     right = 12,
-    top = 14,
-    bottom = 28;
+    top = 22,
+    bottom = 34;
   const plotWidth = width - left - right,
     plotHeight = height - top - bottom;
   const y = (value: number) =>
@@ -98,8 +126,48 @@ export function StockChart({
   const x = (i: number) => left + ((i + 0.5) / bars.length) * plotWidth;
   const bodyWidth = Math.max(2, Math.min(18, (plotWidth / bars.length) * 0.58));
   const coords = bars.map((p, i) => `${x(i)},${y(p.close)}`).join(" ");
+  const markers = summary
+    ? (["high", "low"] as const).flatMap((kind) => {
+        const { value, date } = summary[kind];
+        const i = bars.findIndex((b) => b.date <= date && date <= b.endDate);
+        if (i < 0) return [];
+        const anchor: "start" | "end" | "middle" =
+          i < bars.length * 0.15
+            ? "start"
+            : i > bars.length * 0.85
+              ? "end"
+              : "middle";
+        return [{ kind, value, date, i, anchor }];
+      })
+    : [];
+  const sinceDelta = summary ? active.close - summary.firstClose : null;
+  const sinceStart =
+    summary &&
+    sinceDelta !== null &&
+    describeChange(
+      sinceDelta,
+      summary.firstClose ? (sinceDelta / summary.firstClose) * 100 : null,
+    );
   return (
     <div className="stock-chart">
+      {summary ? (
+        <div className="period-summary">
+          <p className={`period-change ${tone(summary.change)}`}>
+            <strong>{describeChange(summary.change, summary.percent)}</strong>{" "}
+            since {summary.firstDate}
+          </p>
+          <p className="period-detail">
+            {money(summary.firstClose)} → {money(summary.lastClose)} ·
+            High {money(summary.high.value)} on {summary.high.date} · Low{" "}
+            {money(summary.low.value)} on {summary.low.date} ·{" "}
+            {summary.sessions} sessions
+          </p>
+        </div>
+      ) : (
+        <p className="period-summary period-change">
+          Change over this period: Unavailable (fewer than two sessions).
+        </p>
+      )}
       <div className="chart-mode-row">
         <div className="macos-segmented-track" aria-label="Chart style">
           {(["Line", "Candles"] as const).map((value) => (
@@ -149,6 +217,16 @@ export function StockChart({
               </dd>
             </div>
           ))}
+          {sinceStart && (
+            <div>
+              <dt>Since period start</dt>
+              <dd
+                className={`since-start ${tone(sinceDelta!)}`}
+              >
+                {sinceStart}
+              </dd>
+            </div>
+          )}
         </dl>
       </div>
       {mode === "Candles" && !supplied ? (
@@ -285,6 +363,28 @@ export function StockChart({
                 />
               </>
             )}
+            {markers.map((m) => (
+              <g key={m.kind} className={`chart-marker ${m.kind}`}>
+                <title>{`Period ${m.kind} ${money(m.value)} on ${m.date}`}</title>
+                <circle
+                  cx={x(m.i)}
+                  cy={y(m.value)}
+                  r="3.5"
+                  fill="white"
+                  stroke="#354c3c"
+                  strokeWidth="1.5"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <text
+                  x={x(m.i)}
+                  y={y(m.value) + (m.kind === "high" ? -8 : 15)}
+                  textAnchor={m.anchor}
+                  className="chart-marker-label"
+                >
+                  {`${m.kind === "high" ? "High" : "Low"} ${Math.round(m.value).toLocaleString("en-IN")}`}
+                </text>
+              </g>
+            ))}
             <text x={left} y={height - 5} className="chart-axis-label">
               {bars[0].date}
             </text>

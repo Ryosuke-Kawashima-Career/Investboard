@@ -1,6 +1,43 @@
 /** Aggregate supplied OHLC observations without inventing missing values. */
 import type { HistoryPoint } from "./data";
 export type HistoryBar = HistoryPoint & { endDate: string };
+export interface PeriodSummary {
+  firstDate: string;
+  lastDate: string;
+  firstClose: number;
+  lastClose: number;
+  change: number;
+  percent: number | null;
+  high: { value: number; date: string };
+  low: { value: number; date: string };
+  sessions: number;
+}
+/** Change from first to last supplied close; null under two sessions, never 0%. */
+export function summarizePeriod(points: HistoryPoint[]): PeriodSummary | null {
+  if (points.length < 2) return null;
+  const first = points[0],
+    last = points[points.length - 1];
+  let high = { value: -Infinity, date: first.date },
+    low = { value: Infinity, date: first.date };
+  for (const p of points) {
+    const h = p.high ?? p.close,
+      l = p.low ?? p.close;
+    if (h > high.value) high = { value: h, date: p.date };
+    if (l < low.value) low = { value: l, date: p.date };
+  }
+  const change = last.close - first.close;
+  return {
+    firstDate: first.date,
+    lastDate: last.date,
+    firstClose: first.close,
+    lastClose: last.close,
+    change,
+    percent: first.close ? (change / first.close) * 100 : null,
+    high,
+    low,
+    sessions: points.length,
+  };
+}
 export function aggregateHistory(
   history: HistoryPoint[],
   period: string,

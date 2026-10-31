@@ -1,7 +1,7 @@
 ---
 document_type: "implementation_plan"
-version: "1.4.0"
-target_spec_version: "1.4.0"
+version: "1.5.0"
+target_spec_version: "1.5.0"
 status: "In Progress"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -11,7 +11,7 @@ author: "Codex"
 
 Delivery order: Front UI/UX implementation -> Minimum workable backend implementation -> Feedback and improvement by the user. Deliver a complete fixture-backed interface first, connect the smallest backend that makes the core research journey work, then improve the working product from actual user feedback.
 
-Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.4.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 is implemented and verified against real Yahoo Finance and Google News data (2026-10-31); Phase 3 is pending. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
+Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.5.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 is implemented and verified against real Yahoo Finance and Google News data (2026-10-31); Phase 3 is in progress: TASK-10 (price-change readability) is planned and TASK-08 is the feedback loop. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
 
 ## Execution and verification conventions
 
@@ -50,6 +50,10 @@ Phase exit achieved: the user can complete the core research journey with real s
 
 - [ ] TASK-08 — Give the user the working product and guide a review of finding a company, identifying price freshness, explaining a discovery signal, opening its evidence, and saving it. Record feedback as concrete observations, expected behavior, priority, and acceptance criteria. Address blockers first, then usability and research-quality improvements. For each iteration, update affected specification requirements and plan tasks before implementation, make the change, verify the affected journey, and return it to the user for another review. Covers REQ-01–REQ-10. Verification: record the review results and run `npm run test:e2e -- research-feedback.spec.ts` for changed critical journeys; run affected unit/integration checks. Exit: agreed feedback is resolved or explicitly deferred with the user, and the user can complete the research journey.
 
+- [ ] TASK-10 — Make price changes easy to grasp on top of the TASK-09 chart. Increments, each reviewed by the user before the next: (1) pure `summarizePeriod(points)` in `src/chart-data.ts` plus a text summary above the chart (change since period start, direction word and arrow, period high/low with dates, session count; Unavailable under two sessions); (2) cursor readout shows change from period start; (3) period high/low markers, and 1Y defaults to Line; (4) real-data discovery sparkline from observed 1M closes via the existing history route, labeled observed, none when history is missing. Volume bars (needs `volume` stored and served by `server/store.ts`/`server/api.ts`) are optional and only on user request. No new chart library, indicators or Yahoo requests beyond the current budget. Covers REQ-03 and REQ-07. Verification: write failing tests first (`npm run test:unit -- chart-data.test.ts`, extended `stock-chart.spec.ts`, `real-data-research.spec.ts`), then `npm run build`, `npm run test:e2e`, `npm run test:performance` (stay under 3000 ms; margin is thin), and desktop/mobile screenshot review. Exit: a user can state a stock's change over 1M/6M/1Y from the page without hovering, and missing data is never shown as zero change.
+
+Verification on 2026-10-31 (increments 1–4 implemented together at the user's request; awaiting user review, so not marked complete): `npm run build` passed; `npm run test:unit` 27 passed (3 new `summarizePeriod` checks written first and seen failing); `npm run test:integration` 18 passed; `npm run test:e2e -- --workers=4` 32 passed (new: period summary/markers/cursor delta in demo, observed sparkline and 1Y Line default in real mode, Unavailable under two sessions). Real-data review at desktop and 375px: summary, markers, sparkline caption and 1Y line render without overflow; an effect-driven 1Y default flashed one Candles frame and was replaced by render-time derivation. `npm run test:performance` was noisy on the shared machine: ten post-change runs 2211–4058 ms (median ≈2700, three above 3000) vs four baseline runs 2550–2801 ms; no regression is distinguishable from noise, but the margin remains thin. Volume bars not implemented (optional, on request).
+
 Before public launch, TASK-08 also audits data permissions, source attribution, universe disclosure, fixture separation, and research wording; records qualified review of applicable regulatory obligations; and verifies all specification acceptance criteria. Final commands: `npm run build`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e`, `npm run test:performance`, and `python .codex/skills/spec-plan-sync/scripts/verify_spec_plan_sync.py`. Public launch is not a prerequisite for collecting feedback on the working MVP.
 
 Dependencies: Phase 1 executes TASK-01 -> TASK-02 -> TASK-06. Phase 2 follows the Phase 1 exit and executes provider decisions -> TASK-03 -> TASK-04 -> TASK-05 -> TASK-07. Phase 3 follows the Phase 2 exit and executes TASK-08 as a repeatable user-feedback loop. Task IDs are preserved for traceability; execution follows phase order rather than numeric order. Do not mark a task complete until its verification and exit criteria pass.
@@ -60,11 +64,11 @@ Dependencies: Phase 1 executes TASK-01 -> TASK-02 -> TASK-06. Phase 2 follows th
 |---|---|---|
 | REQ-01 | TASK-01, TASK-02, TASK-03, TASK-08 | Search, universe disclosure, exchange collision tests |
 | REQ-02 | TASK-01, TASK-02, TASK-03, TASK-08 | Quote calculations, timestamp and stale/outage tests |
-| REQ-03 | TASK-01, TASK-02, TASK-03, TASK-08, TASK-09 | Profile/history contracts and missing-data tests |
+| REQ-03 | TASK-01, TASK-02, TASK-03, TASK-08, TASK-09, TASK-10 | Profile/history contracts and missing-data tests |
 | REQ-04 | TASK-01, TASK-02, TASK-05, TASK-08 | Deterministic discovery and explanation tests |
 | REQ-05 | TASK-01, TASK-02, TASK-04, TASK-05, TASK-08 | Attribution, deduplication and claim-evidence tests |
 | REQ-06 | TASK-06, TASK-08 | Watchlist persistence, reset and storage-failure tests |
-| REQ-07 | TASK-02, TASK-07, TASK-08, TASK-09 | Responsive, keyboard, accessibility and performance checks |
+| REQ-07 | TASK-02, TASK-07, TASK-08, TASK-09, TASK-10 | Responsive, keyboard, accessibility and performance checks |
 | REQ-08 | TASK-01, TASK-02, TASK-04, TASK-05, TASK-08 | Risk wording, contrary evidence, permissions and launch review |
 | REQ-09 | TASK-01, TASK-02, TASK-03, TASK-04, TASK-07, TASK-08 | Adapter validation, quota, cache, failure and fixture checks |
 | REQ-10 | TASK-01, TASK-03, TASK-04, TASK-06, TASK-07, TASK-08 | Secret/input/content protection, reset and log checks |
@@ -87,6 +91,7 @@ During Phase 3 user-feedback iterations, revise scope and acceptance criteria in
 | 1.2.0–1.2.1 | 2026-10-31 | Historical Alpha Vantage backend attempt: identity succeeded, daily prices unavailable; tracked integration subsequently reverted by user to ff1b55f; untracked artifacts survived | Preserved attempt history | Superseded |
 | 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
 | 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
+| 1.5.0 | 2026-10-31 | Added TASK-10 for price-change readability (period summary, cursor delta, high/low markers, observed sparklines) | User chart-readability request, specification 1.5.0 | In Progress |
 
 ## Replacement backend contract · 1.3.0
 

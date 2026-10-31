@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { aggregateHistory } from "../../src/chart-data";
+import { aggregateHistory, summarizePeriod } from "../../src/chart-data";
 import { listings, type HistoryPoint } from "../../src/data";
 const point = (
   date: string,
@@ -79,4 +79,43 @@ it("history ends at the displayed quote and previous close", () => {
     expect(listing.history.at(-1)?.close).toBe(listing.quote.price);
     expect(listing.history.at(-2)?.close).toBe(listing.quote.previousClose);
   }
+});
+it("summarizes period change from first to last close with dated high and low", () => {
+  const summary = summarizePeriod([
+    point("2026-10-01", 100, 104, 98, 100),
+    point("2026-10-02", 101, 112, 99, 110),
+    point("2026-10-05", 108, 109, 95, 105),
+  ]);
+  expect(summary).toMatchObject({
+    firstDate: "2026-10-01",
+    lastDate: "2026-10-05",
+    firstClose: 100,
+    lastClose: 105,
+    change: 5,
+    percent: 5,
+    high: { value: 112, date: "2026-10-02" },
+    low: { value: 95, date: "2026-10-05" },
+    sessions: 3,
+  });
+});
+it("uses closes for high and low when OHLC is not supplied", () => {
+  const close = (date: string, value: number) =>
+    ({ date, close: value, currency: "INR", source: "test", basis: "unadjusted" }) as HistoryPoint;
+  const summary = summarizePeriod([close("2026-10-01", 50), close("2026-10-02", 40), close("2026-10-03", 45)]);
+  expect(summary).toMatchObject({
+    change: -5,
+    percent: -10,
+    high: { value: 50, date: "2026-10-01" },
+    low: { value: 40, date: "2026-10-02" },
+  });
+});
+it("never reports a change for fewer than two sessions or a zero base", () => {
+  expect(summarizePeriod([])).toBeNull();
+  expect(summarizePeriod([point("2026-10-01", 1, 2, 1, 1)])).toBeNull();
+  const zero = summarizePeriod([
+    point("2026-10-01", 0, 0, 0, 0),
+    point("2026-10-02", 1, 2, 1, 2),
+  ]);
+  expect(zero?.change).toBe(2);
+  expect(zero?.percent).toBeNull();
 });

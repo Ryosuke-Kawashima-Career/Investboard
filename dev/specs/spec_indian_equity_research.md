@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.4.0"
+version: "1.5.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -41,7 +41,7 @@ The MVP supports research and a local watchlist. Brokerage connectivity, order e
 |---|---|---|
 | REQ-01 | Search Indian listed companies | Search by name or symbol; results show company, symbol, and exchange. Distinct exchange listings are unambiguous. Unknown queries show a helpful empty state. Display the supported universe and coverage limits. |
 | REQ-02 | Make stock prices easy to understand | Show INR price, absolute and percentage change against previous close, exchange, source, quote timestamp, and live/delayed/end-of-day status. Missing or stale values are labeled; never substitute zero. Market closures preserve the actual quote timestamp. |
-| REQ-03 | Provide company research pages | Show company identity, sector, latest quote, and selectable 1-month, 6-month, and 1-year history where available. Offer line and candlestick views with open/high/low/close (OHLC) values, a rise/fall text legend, and pointer/keyboard inspection. Use daily candles for 1M, calendar-week candles for 6M, and calendar-month candles for 1Y; aggregation preserves first open, last close, maximum high and minimum low. Never derive real OHLC from close-only feeds; candlesticks require supplied OHLC, while demo OHLC must be explicitly synthetic. Label chart currency, dates, data gaps, and adjusted/unadjusted basis. Unavailable fundamentals remain unavailable; supplied fundamentals show period and source. |
+| REQ-03 | Provide company research pages | Show company identity, sector, latest quote, and selectable 1-month, 6-month, and 1-year history where available. Offer line and candlestick views with open/high/low/close (OHLC) values, a rise/fall text legend, and pointer/keyboard inspection. Use daily candles for 1M, calendar-week candles for 6M, and calendar-month candles for 1Y; aggregation preserves first open, last close, maximum high and minimum low. Never derive real OHLC from close-only feeds; candlesticks require supplied OHLC, while demo OHLC must be explicitly synthetic. Label chart currency, dates, data gaps, and adjusted/unadjusted basis. Unavailable fundamentals remain unavailable; supplied fundamentals show period and source. Show a period-change summary for the selected range (first and last close, absolute and percentage change, period high and low with dates, session count) as text that states direction; with fewer than two sessions show Unavailable, never 0%. The inspected point shows its change from the period start, and period high and low are marked on the chart. 1Y defaults to the line view; candles stay selectable. |
 | REQ-04 | Discover companies with explainable signals | Offer sector filtering and transparent signals such as revenue growth, profitability, valuation context, or recent business developments when supported by data. Each signal states definition, observation period, source, and limitations. Missing data never improves rank. Define and version any ordering formula before enabling it; do not present ordering as a return forecast. |
 | REQ-05 | Turn web information into traceable evidence | Each company-linked item shows headline, publisher, source URL, publication date when available, retrieval time, and a short factual summary. Prefer filings and company disclosures where available; distinguish reporting from opinion. Deduplicate syndicated stories, verify company association, and disclose stale coverage and conflicting evidence. Every generated factual claim must link to supporting evidence or be omitted. |
 | REQ-06 | Support a simple watchlist | Add/remove distinct company listings and persist them locally across reloads. Show price and freshness for each entry; explain device-only storage. Handle unavailable browser storage without breaking research. |
@@ -87,6 +87,7 @@ Measure task success during usability review: can a participant find a company, 
 | 1.2.0–1.2.1 | 2026-10-31 | Historical Alpha Vantage backend attempt: identity succeeded, daily prices unavailable; tracked integration subsequently reverted by user to ff1b55f; untracked artifacts survived | Preserved attempt history | Superseded |
 | 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
 | 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
+| 1.5.0 | 2026-10-31 | Phase 3 price-change readability: period summary, cursor delta, high/low markers, 1Y line default, observed sparklines | User chart-readability request | In Progress |
 
 ## Replacement backend contract · 1.3.0
 
@@ -113,3 +114,7 @@ Evidence: Google News RSS search (`news.google.com/rss/search`, exact company na
 Signals, versioned, deterministic, alphabetical results, never a forecast: `recent-disclosure-v1` (unchanged); `price-momentum-1m-v1` = latest close vs the last close on or before one calendar month earlier, qualifies at ≥ +5%; `news-coverage-7d-v1` = distinct company-matched headlines published in the 7 India calendar days ending today, qualifies at ≥ 3. Missing history yields no value and never qualifies.
 
 Requests: one chart and one news request per listing per refresh, sequential with a short pause; persisted shared budget 60 per rolling day (hard cap 100); per-host Retry-After/429 cooldown. Fixed allowlist: Yahoo chart paths for universe symbols only, and the Google News search path.
+
+## Price-change readability · 1.5.0
+
+Goal: users grasp how a price changed, not only what it was. Derived from supplied closes only; no forecast, smoothing, indicators or interpolation. Period change = last close vs first close in the selected calendar range (1M/6M/1Y); high/low use supplied highs/lows when OHLC exists, otherwise closes. Discovery rows show a close-only sparkline of the last 1M from observed history, labeled observed (not synthetic); rows without history show none. Volume, multi-stock comparison, intraday ranges and technical indicators are out of scope until separately specified. Verification: unit tests for the summary function (partial history, single session, zero first close), chart and list browser journeys at 1440px and 360px, and the 3-second performance target.

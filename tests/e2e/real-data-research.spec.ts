@@ -94,3 +94,52 @@ test("cold-cache API failure has retry and never falls back to demo", async ({
     page.getByRole("button", { name: "Retry" }).first(),
   ).toBeVisible();
 });
+test("observed sparkline and period change summary use real history only", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-31T06:00:00Z"));
+  await page.route("**/api/companies", (r) => r.fulfill({ json: payload() }));
+  await page.goto("/");
+  const spark = page.getByRole("img", {
+    name: /^Reliance Industries Limited observed 1M closing prices, INR: (Up|Down|Unchanged) ₹/,
+  });
+  await expect(spark).toBeVisible();
+  await expect(page.locator(".observed-sparkline-figure figcaption")).toContainText(
+    "Last month, observed closes",
+  );
+  await page
+    .getByRole("button", { name: "Reliance Industries Limited", exact: true })
+    .click();
+  await expect(page.locator(".period-change")).toHaveText(
+    /^(Up|Down|Unchanged) ₹[\d,.]+ \([+−]\d+\.\d{2}%\) since \d{4}-\d{2}-\d{2}$/,
+  );
+  await page.getByRole("button", { name: "1Y", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Line", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".chart-marker")).toHaveCount(2);
+  await expect(page.locator("body")).not.toContainText("synthetic");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+test("history with fewer than two sessions shows Unavailable, not zero change", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-31T06:00:00Z"));
+  const data = payload();
+  data.data = data.data.map((l: any) => ({ ...l, history: l.history.slice(-1) }));
+  await page.route("**/api/companies", (r) => r.fulfill({ json: data }));
+  await page.goto("/");
+  await expect(page.locator(".observed-sparkline")).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Reliance Industries Limited", exact: true })
+    .click();
+  await page.getByRole("button", { name: "1M", exact: true }).click();
+  await expect(page.locator(".period-change")).toHaveText(
+    "Change over this period: Unavailable (fewer than two sessions).",
+  );
+  await expect(page.locator("body")).not.toContainText("+0.00%");
+});

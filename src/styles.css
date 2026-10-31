@@ -1854,3 +1854,13 @@ dd {
 .detail-header h1 { font-size:clamp(24px,4vw,36px); }
 .price small { display:block; font-size:11px; color:#53604e; font-weight:400; }
 @media(max-width:640px) { .chart-panel { padding:16px; } .section-heading { flex-wrap:wrap; gap:12px; } }
+.period-summary { margin:0 0 16px; }
+.period-change { font-size:13px; color:#354c3c; margin:0; }
+.period-change strong { font-weight:650; }
+.period-change.up strong, .since-start.up { color:#3c825d; }
+.period-change.down strong, .since-start.down { color:#af6757; }
+.period-detail { font-size:10px; color:#74816d; margin:4px 0 0; font-variant-numeric:tabular-nums; }
+.chart-marker-label { font-size:10px; fill:#354c3c; font-weight:600; font-family:var(--macos-font-sans); font-variant-numeric:tabular-nums; }
+.observed-sparkline-figure { margin:0; }
+.observed-sparkline { display:block; width:100%; height:44px; margin:10px 0 6px; }
+@media (max-width: 640px) { .period-change { font-size:12px; } .period-detail { font-size:9px; } .chart-marker-label { font-size:9px; } }

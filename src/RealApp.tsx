@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Bookmark, Leaf, Search, ArrowLeft, Info } from "lucide-react";
 import { money } from "./data";
-import { StockChart } from "./StockChart";
+import { summarizePeriod } from "./chart-data";
+import { StockChart, describeChange } from "./StockChart";
 import { useWatchlist } from "./useWatchlist";
 import {
   loadResearch,
@@ -62,6 +63,53 @@ function Quote({ listing }: { listing: RealListing }) {
       </small>
       <small>Freshness: {q.freshness}. No verified exchange calendar.</small>
     </div>
+  );
+}
+/** Close-only last-month trend; rows without two observed sessions show none. */
+function ObservedSparkline({
+  listing,
+  today,
+}: {
+  listing: RealListing;
+  today: string;
+}) {
+  const from = rangeStart(today, "1M"),
+    points = listing.history.filter((p) => p.date >= from && p.date <= today),
+    summary = summarizePeriod(points);
+  if (!summary) return null;
+  const width = 300,
+    height = 44,
+    closes = points.map((p) => p.close),
+    min = Math.min(...closes),
+    span = Math.max(...closes) - min || 1;
+  const coords = closes
+    .map(
+      (c, i) =>
+        `${(i / (closes.length - 1)) * width},${height - 3 - ((c - min) / span) * (height - 6)}`,
+    )
+    .join(" ");
+  const label = `${describeChange(summary.change, summary.percent)} since ${summary.firstDate}`;
+  return (
+    <figure className="observed-sparkline-figure">
+      <svg
+        className="observed-sparkline"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${listing.name} observed 1M closing prices, INR: ${label}`}
+        preserveAspectRatio="none"
+      >
+        <polyline
+          points={coords}
+          stroke={summary.change < 0 ? "#af6757" : "#36876a"}
+          strokeWidth="2"
+          fill="none"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <figcaption className="small muted">
+        Last month, observed closes · {label}
+      </figcaption>
+    </figure>
   );
 }
 export default function RealApp() {
@@ -455,6 +503,7 @@ export default function RealApp() {
                         {save(l)}
                       </div>
                       <Quote listing={l} />
+                      <ObservedSparkline listing={l} today={today} />
                       <p>
                         {l.signals
                           .filter((s) => s.unit !== "flag" || s.qualifies)
