@@ -97,6 +97,45 @@ export async function loadCompany(
     throw new Error("Unexpected company response");
   return result.data;
 }
+export type AgentStatus = {
+  available: boolean;
+  providers: { name: string; model: string }[];
+  dailyCap: number;
+};
+export async function loadAgentStatus(
+  signal: AbortSignal,
+): Promise<AgentStatus | null> {
+  const response = await fetch("/api/agent/status", { signal });
+  if (!response.ok) return null;
+  const result = await response.json().catch(() => null);
+  return result?.meta?.mode === "real" &&
+    typeof result.data?.available === "boolean"
+    ? result.data
+    : null;
+}
+export type AgentAnswer = {
+  kind: "answer" | "refusal";
+  text: string;
+  period?: string;
+  citations: { id: string; label: string; href?: string }[];
+  provider: string | null;
+  model: string | null;
+};
+/** Throws an Error whose message is the server's error code. */
+export async function askResearchAgent(
+  companyId: string,
+  question: string,
+): Promise<AgentAnswer> {
+  const response = await fetch("/api/agent", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ companyId, question }),
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.data?.text)
+    throw new Error(result?.error?.code ?? "AGENT_ERROR");
+  return result.data;
+}
 export function rangeStart(today: string, period: string) {
   const d = new Date(today + "T00:00:00Z"),
     day = d.getUTCDate();

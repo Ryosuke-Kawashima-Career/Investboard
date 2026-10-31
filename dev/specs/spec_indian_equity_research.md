@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.9.0"
+version: "1.10.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -95,6 +95,7 @@ Measure task success during usability review: can a participant find a company, 
 | 1.7.0 | 2026-10-31 | Real-data MVP: Google News headline tone added as a REQ-11 source (already permitted), provisional news minimum sample, in-app labeled evaluation; rule-based REQ-12 agent over real stored data | User real-data MVP request (chose headline tone and a scripted agent) | In Progress |
 | 1.8.0 | 2026-10-31 | Universe expanded from 10 to 50 NSE large caps; request budget sized for one full refresh; compact list API with per-company detail to keep the 3-second target | User request for more companies to research | In Progress |
 | 1.9.0 | 2026-10-31 | Real-data interface matches the demo layout and macOS light styling | User request for visual parity with the demo | In Progress |
+| 1.10.0 | 2026-10-31 | LLM-backed REQ-12 agent (Anthropic, OpenAI, Gemini from local environment keys) with server-side guardrails, caps and rule-based fallback | User request for an LLM research agent | In Progress |
 
 ## Replacement backend contract · 1.3.0
 
@@ -169,4 +170,12 @@ Payload: `/api/companies` returns compact summaries (identity, quote, signals, l
 ## Real-data visual parity · 1.9.0
 
 The real-data interface uses the demo's layout and components: a sidebar with icons and a watchlist count; a topbar with breadcrumb, search with a working Ctrl/⌘ K shortcut, and a data badge that opens the research approach; a hero; a "research radar" of up to three cards for listings that qualify for `price-momentum-1m-v1` (alphabetical, never by size of return); a company table with logo tiles, price and daily change, and the last-month observed sparkline; a detail page with quote and chart panel, company snapshot, one signal panel per signal, and disclosure and headline evidence cards; and the research approach as a modal dialog. Everything shown is wired to real data or a real action. Values that are not sourced stay "Unavailable". Headline cards are labeled with their headline tone, never as opportunity or risk claims, and real mode never shows the word "synthetic".
+
+## LLM research agent · 1.10.0
+
+Chosen by the user on 2026-10-31: the agent uses whichever of `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `GEMINI_API_KEY` is set in the server's environment. Keys stay server-side and are never logged, returned or stored. Default order: Anthropic (`claude-opus-5-5`), OpenAI (`gpt-5.4-mini`), Gemini (`gemini-3.5-flash`). `AGENT_PROVIDER` pins one provider, and `ANTHROPIC_MODEL`, `OPENAI_MODEL` and `GEMINI_MODEL` override the models. If one provider fails, the next is tried.
+
+Tools: instead of a model-driven tool loop, the server runs the fixed read-only tools (quote, 1M and 6M price summaries, signals, 30-day headline tone, up to 20 most recent headlines with ids) for the requested listing and passes their results to the model as one quoted JSON block marked untrusted. This is provider-neutral and keeps every answer traceable to stored data. The model must cite ids such as [Q], [P1M], [S1] and [H3]. The server maps cited ids to their sources, drops unknown ids, and returns the citations with links.
+
+Guardrails: advice, target and forecast questions are refused before any model call. Answers that still contain advice or forecast phrasing are replaced with the refusal. User text is capped at 500 characters. Each question is answered on its own; conversations live only in the browser and are cleared on request. Caps: 10 questions per page session (client), 50 model calls per rolling day (server, persisted), 1,500 output tokens per answer (including any model reasoning), 20-second timeout. Logs record provider, status and duration only, never message content or keys. When no key is set, the cap is reached or every provider fails, the API says so and the page shows the rule-based answer with that notice; price, evidence and tone views keep working. Answers are labeled "AI-generated" with the provider and model.
 

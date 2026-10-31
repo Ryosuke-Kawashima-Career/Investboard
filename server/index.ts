@@ -7,10 +7,53 @@ import { Store } from "./store.ts";
 import { Provider } from "./provider.ts";
 import { route } from "./api.ts";
 import { indiaDate } from "./domain.ts";
+import { agentStatus, askAgent } from "./agent.ts";
 export function makeServer(store: Store) {
   return createServer(async (req, res) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("Referrer-Policy", "no-referrer");
+    const json = (status: number, body: unknown) => {
+      res.writeHead(status, {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-store",
+      });
+      res.end(JSON.stringify(body));
+    };
+    const path = new URL(req.url || "/", "http://localhost").pathname;
+    if (path === "/api/agent/status" && req.method === "GET") {
+      json(200, { data: agentStatus(), meta: { mode: "real" } });
+      return;
+    }
+    if (path === "/api/agent") {
+      // JSON-only and same-origin, so other sites cannot spend model calls.
+      const origin = req.headers.origin;
+      if (
+        req.method !== "POST" ||
+        !/^application\/json\b/.test(req.headers["content-type"] || "") ||
+        (origin && new URL(origin).host !== req.headers.host)
+      ) {
+        json(403, { error: { code: "FORBIDDEN" } });
+        return;
+      }
+      let raw = "";
+      for await (const chunk of req) {
+        raw += chunk;
+        if (raw.length > 4096) {
+          json(413, { error: { code: "TOO_LARGE" } });
+          return;
+        }
+      }
+      let input: unknown;
+      try {
+        input = JSON.parse(raw);
+      } catch {
+        json(400, { error: { code: "INVALID_QUESTION" } });
+        return;
+      }
+      const result = await askAgent(store, input);
+      json(result.status, result.body);
+      return;
+    }
     if (req.method !== "GET") {
       res.writeHead(405);
       res.end();

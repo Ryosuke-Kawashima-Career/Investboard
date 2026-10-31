@@ -51,6 +51,15 @@ test("real headline tone and rule-based agent use stored data only", async ({
   await page.route("**/api/companies", (r) =>
     r.fulfill({ json: withHeadlines() }),
   );
+  // Keep this journey on the rule-based agent regardless of local API keys.
+  await page.route("**/api/agent/status", (r) =>
+    r.fulfill({
+      json: {
+        data: { available: false, providers: [] },
+        meta: { mode: "real" },
+      },
+    }),
+  );
   await page.goto("/");
   await page
     .getByRole("button", { name: "Reliance Industries Limited", exact: true })

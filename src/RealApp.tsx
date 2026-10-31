@@ -626,6 +626,7 @@ export default function RealApp() {
                   key={`agent-${listing.id}`}
                   ctx={realAgentContext(listing, today)}
                   symbol={listing.symbol}
+                  companyId={listing.companyId}
                 />
                 <div className="section-top evidence-heading">
                   <div>
