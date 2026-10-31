@@ -1864,3 +1864,41 @@ dd {
 .observed-sparkline-figure { margin:0; }
 .observed-sparkline { display:block; width:100%; height:44px; margin:10px 0 6px; }
 @media (max-width: 640px) { .period-change { font-size:12px; } .period-detail { font-size:9px; } .chart-marker-label { font-size:9px; } }
+
+/* REQ-11 sentiment panel — macOS light acrylic */
+.sentiment-panel { margin:24px 0; padding:24px; border-radius:var(--macos-radius-frame); background:var(--macos-surface-acrylic); backdrop-filter:var(--macos-blur-dock); -webkit-backdrop-filter:var(--macos-blur-dock); border:1px solid var(--macos-border-subtle); box-shadow:var(--macos-shadow-card), var(--macos-inner-glow); min-width:0; }
+.sentiment-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.sentiment-head .eyebrow { display:flex; align-items:center; gap:6px; color:var(--macos-text-secondary); }
+.sentiment-head h2 { margin:4px 0 0; color:var(--macos-text-primary); }
+.sentiment-banner { display:flex; gap:8px; align-items:flex-start; margin:0 0 16px; padding:10px 14px; border-radius:var(--macos-radius-pill); background:rgba(255,149,0,.1); color:#8a5300; font-size:12px; line-height:1.5; }
+.sentiment-banner svg { flex:none; margin-top:2px; }
+.sentiment-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+.sentiment-source { padding:16px; border-radius:var(--macos-radius-outer); background:var(--macos-surface-card); border:1px solid var(--macos-border-subtle); box-shadow:var(--macos-inner-glow); min-width:0; transition:transform var(--macos-duration-fast) var(--macos-ease-spring), box-shadow var(--macos-duration-fast) var(--macos-ease-spring); }
+.sentiment-source:hover { transform:translateY(-1px); box-shadow:var(--macos-shadow-card), var(--macos-inner-glow); }
+.sentiment-source h3 { display:flex; align-items:center; gap:6px; margin:0 0 4px; font-size:15px; }
+.sentiment-source p { margin:6px 0; overflow-wrap:anywhere; }
+.sentiment-source.unavailable { background:var(--macos-surface-track); }
+.sentiment-state { font-weight:650; color:var(--macos-text-primary); }
+.sentiment-bar { display:flex; height:10px; margin:12px 0 8px; border-radius:var(--macos-radius-pill); overflow:hidden; background:var(--macos-surface-track); gap:2px; }
+.sentiment-bar .seg { flex-basis:0; min-width:3px; }
+.seg.positive, .dot.positive { background:var(--macos-accent-green); }
+.seg.negative, .dot.negative { background:var(--macos-accent-red); }
+.seg.neutral, .dot.neutral { background:#a1a1aa; }
+.seg.mixed, .dot.mixed { background:var(--macos-accent-orange); }
+.seg.unclassifiable, .dot.unclassifiable { background:repeating-linear-gradient(45deg,#d4d4d8 0 3px,#f4f4f5 3px 6px); }
+.sentiment-legend { display:flex; flex-wrap:wrap; gap:4px 12px; padding:0; margin:0 0 6px; list-style:none; font-size:11px; color:var(--macos-text-secondary); }
+.sentiment-legend li { display:flex; align-items:center; gap:5px; }
+.sentiment-legend strong { color:var(--macos-text-primary); font-variant-numeric:tabular-nums; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; flex:none; }
+.sentiment-source .up { color:#248a3d; } .sentiment-source .down { color:#c4302b; }
+.sentiment-flag { display:flex; gap:6px; align-items:flex-start; font-size:11px; color:#a35200; }
+.sentiment-flag svg { flex:none; margin-top:2px; }
+.sentiment-cited summary { cursor:pointer; font-size:12px; color:var(--macos-accent-blue); }
+.sentiment-cited ul { margin:8px 0 0; padding:0; list-style:none; font-size:12px; display:grid; gap:6px; }
+.trends-line { display:block; width:100%; height:56px; margin:8px 0; }
+.trends-line polyline { fill:none; stroke:var(--macos-accent-blue); stroke-width:2; vector-effect:non-scaling-stroke; }
+.sentiment-empty { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:16px; border-radius:var(--macos-radius-outer); background:var(--macos-surface-track); }
+.sentiment-empty p { margin:0; }
+.sentiment-empty .secondary-button { display:inline-flex; align-items:center; gap:6px; transition:transform var(--macos-duration-fast) var(--macos-ease-spring); }
+.sentiment-empty .secondary-button:active { transform:scale(.96); }
+@media(max-width:640px) { .sentiment-panel { padding:16px; } .sentiment-banner { border-radius:var(--macos-radius-outer); } }

@@ -4,14 +4,36 @@
     {
       "name": "research-app",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["--env-file-if-exists=.env", "server/index.ts"],
+      "runtimeArgs": [
+        "--env-file-if-exists=.env",
+        "server/index.ts"
+      ],
       "port": 3001
     },
     {
       "name": "frontend-demo",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5173", "--directory", "app"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5173",
+        "--directory",
+        "app"
+      ],
       "port": 5173
+    },
+    {
+      "name": "vite-sentiment",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180
     }
   ]
 }

@@ -1,7 +1,7 @@
 ---
 document_type: "implementation_plan"
-version: "1.5.0"
-target_spec_version: "1.5.0"
+version: "1.6.0"
+target_spec_version: "1.6.0"
 status: "In Progress"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -11,7 +11,7 @@ author: "Codex"
 
 Delivery order: Front UI/UX implementation -> Minimum workable backend implementation -> Feedback and improvement by the user. Deliver a complete fixture-backed interface first, connect the smallest backend that makes the core research journey work, then improve the working product from actual user feedback.
 
-Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.5.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 is implemented and verified against real Yahoo Finance and Google News data (2026-10-31); Phase 3 is in progress: TASK-10 (price-change readability) is planned and TASK-08 is the feedback loop. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
+Specification: [Indian equity research MVP](../specs/spec_indian_equity_research.md), version 1.6.0. Phase 1 is implemented and verified with synthetic fixtures; Phase 2 is implemented and verified against real Yahoo Finance and Google News data (2026-10-31); Phase 3 is in progress: TASK-10 (price-change readability) is planned and TASK-08 is the feedback loop. Phase 4 (social sentiment insights and a research agent, REQ-11/REQ-12) is in progress: the TASK-11 synthetic sentiment panel is implemented; the agent chat is not started. See [frontend contracts and verification record](../contracts/frontend_contracts.md).
 
 ## Execution and verification conventions
 
@@ -56,7 +56,18 @@ Verification on 2026-10-31 (increments 1–4 implemented together at the user's 
 
 Before public launch, TASK-08 also audits data permissions, source attribution, universe disclosure, fixture separation, and research wording; records qualified review of applicable regulatory obligations; and verifies all specification acceptance criteria. Final commands: `npm run build`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e`, `npm run test:performance`, and `python .codex/skills/spec-plan-sync/scripts/verify_spec_plan_sync.py`. Public launch is not a prerequisite for collecting feedback on the working MVP.
 
-Dependencies: Phase 1 executes TASK-01 -> TASK-02 -> TASK-06. Phase 2 follows the Phase 1 exit and executes provider decisions -> TASK-03 -> TASK-04 -> TASK-05 -> TASK-07. Phase 3 follows the Phase 2 exit and executes TASK-08 as a repeatable user-feedback loop. Task IDs are preserved for traceability; execution follows phase order rather than numeric order. Do not mark a task complete until its verification and exit criteria pass.
+### Phase 4: Social sentiment insights and research agent
+
+Fixture-first like earlier phases: build and review the interface and conversation with labeled synthetic data, pass the provider permission gate, then connect real sources. No source is called live before TASK-12 passes.
+
+- [ ] TASK-11 — Build the sentiment panel and agent chat on the company page with clearly labeled synthetic fixtures: Google Trends shown as relative interest, post-source counts (positive/negative/neutral/mixed/unclassifiable), prior-period change, classifier version and accuracy, minimum-sample "Not enough data" state, unavailable-source state, spike/author-concentration flags, links to cited posts, plus a chat that cites its data, labels itself AI-generated, declines advice, and can be cleared. Sentiment is absent from discovery ranking and filters. Covers REQ-07, REQ-08, REQ-11, REQ-12. Verification: `npm run test:e2e -- sentiment-agent.spec.ts` at 1440px and 360px, screenshot review, and `npm run build`. Exit: the user can review the interaction end to end on synthetic data and no synthetic value looks real.
+  Progress on 2026-10-31 (sentiment increment; agent chat not started, so not marked complete): pure `src/sentiment.ts` (`aggregateSentiment`: 7/30-day windows in India dates, URL deduplication, minimum sample of 30 items from 10 authors, positive-share change vs the prior period only when both periods meet the minimum, author-concentration >25% and one-day volume-spike flags, three most recent cited items; `syntheticSentiment`: deterministic per-listing Reddit fixture, X shown as an unavailable source, Google Trends shown as 0–100 relative interest) and `src/SentimentPanel.tsx` in macOS light acrylic style on the demo company page. Real mode shows only "Unavailable" until TASK-12 passes, because the existing real-mode check forbids synthetic content. Classifier accuracy is shown as not yet measured. Verification: `npm run test:unit -- sentiment.test.ts` 4 written first and seen failing, then passing; `npm run test:unit` 31 passed; `npm run build` passed; `npm run test:e2e -- --workers=4` 34 passed, including the new `sentiment-agent.spec.ts` at 1440px and 360px; desktop and 360px browser review with no horizontal overflow. Remaining for TASK-11: the agent chat fixture.
+- [ ] TASK-12 — Permission and provider gate. For Google Trends, X and Reddit, record in `dev/data/` the access method, terms, cost, rate limits, storage and display rights, India/English coverage, and whether the use is allowed; choose which sources go live and drop any that fail; choose the classifier and the agent model provider with cost caps. Covers REQ-08, REQ-09, REQ-10, REQ-11. Verification: written source register reviewed with the user, plus a provider probe like `test:provider` that stays within budget. Exit: each live source has documented permission, or is explicitly deferred and shown as unavailable.
+- [ ] TASK-13 — Implement the sentiment pipeline for the sources approved in TASK-12: adapters with validation, bounded requests and backoff, company matching, deduplication, spike and author checks, versioned classifier, daily aggregates in SQLite, and a query API with partial/unavailable states. Build and score the labeled evaluation set; publish accuracy and the confusion matrix in the app; agree and record the enabling threshold in the specification before turning sentiment on. Covers REQ-09, REQ-10, REQ-11. Verification: `npm run test:unit -- sentiment.test.ts`, `npm run test:integration -- sentiment-api.test.ts`, `npm run test:sentiment-eval` (pending script). Exit: sentiment shows real aggregates with measured accuracy, or is withheld with the reason.
+- [ ] TASK-14 — Connect the agent: read-only fixed tools over stored data, quoted tool results, cited answers, advice/forecast refusals, untrusted-text handling, session and daily request/cost caps, conversation clear, no server-side message storage beyond the session, content-free logs, and outage fallback that leaves other views working. Covers REQ-08, REQ-10, REQ-12. Verification: `npm run test:unit -- agent-guardrails.test.ts` (advice refusal, prompt injection in posts and user text, missing-data abstention, cap behavior), `npm run test:integration -- agent-api.test.ts`, and `npm run test:e2e -- sentiment-agent.spec.ts`. Exit: every agent answer is traceable to a tool result and guardrail tests pass.
+- [ ] TASK-15 — Trust audit before sharing outside the trial: re-verify source permissions and attribution, check that sentiment never affects ranking, review wording with the user, record the qualified regulatory review items from the specification, and run all final commands from TASK-08 plus the evaluation and guardrail suites. Covers REQ-07–REQ-12. Verification: audit record in `dev/verification/` and the full command set. Exit: user sign-off or explicit deferrals.
+
+Dependencies: Phase 1 executes TASK-01 -> TASK-02 -> TASK-06. Phase 2 follows the Phase 1 exit and executes provider decisions -> TASK-03 -> TASK-04 -> TASK-05 -> TASK-07. Phase 3 follows the Phase 2 exit and executes TASK-08 as a repeatable user-feedback loop. Phase 4 executes TASK-11 -> TASK-12 -> TASK-13 -> TASK-14 -> TASK-15; TASK-11 may start before TASK-10 review completes, but TASK-13 and TASK-14 require the TASK-12 gate. Task IDs are preserved for traceability; execution follows phase order rather than numeric order. Do not mark a task complete until its verification and exit criteria pass.
 
 ## Requirement traceability
 
@@ -68,10 +79,12 @@ Dependencies: Phase 1 executes TASK-01 -> TASK-02 -> TASK-06. Phase 2 follows th
 | REQ-04 | TASK-01, TASK-02, TASK-05, TASK-08 | Deterministic discovery and explanation tests |
 | REQ-05 | TASK-01, TASK-02, TASK-04, TASK-05, TASK-08 | Attribution, deduplication and claim-evidence tests |
 | REQ-06 | TASK-06, TASK-08 | Watchlist persistence, reset and storage-failure tests |
-| REQ-07 | TASK-02, TASK-07, TASK-08, TASK-09, TASK-10 | Responsive, keyboard, accessibility and performance checks |
-| REQ-08 | TASK-01, TASK-02, TASK-04, TASK-05, TASK-08 | Risk wording, contrary evidence, permissions and launch review |
-| REQ-09 | TASK-01, TASK-02, TASK-03, TASK-04, TASK-07, TASK-08 | Adapter validation, quota, cache, failure and fixture checks |
-| REQ-10 | TASK-01, TASK-03, TASK-04, TASK-06, TASK-07, TASK-08 | Secret/input/content protection, reset and log checks |
+| REQ-07 | TASK-02, TASK-07, TASK-08, TASK-09, TASK-10, TASK-11, TASK-15 | Responsive, keyboard, accessibility and performance checks |
+| REQ-08 | TASK-01, TASK-02, TASK-04, TASK-05, TASK-08, TASK-11, TASK-12, TASK-14, TASK-15 | Risk wording, contrary evidence, permissions and launch review |
+| REQ-09 | TASK-01, TASK-02, TASK-03, TASK-04, TASK-07, TASK-08, TASK-12, TASK-13 | Adapter validation, quota, cache, failure and fixture checks |
+| REQ-10 | TASK-01, TASK-03, TASK-04, TASK-06, TASK-07, TASK-08, TASK-12, TASK-13, TASK-14 | Secret/input/content protection, reset and log checks |
+| REQ-11 | TASK-11, TASK-12, TASK-13, TASK-15 | Fixture journey, source register, labeled-set accuracy report, minimum-sample and manipulation-flag tests |
+| REQ-12 | TASK-11, TASK-14, TASK-15 | Guardrail tests: advice refusal, prompt injection, missing-data abstention, caps, outage fallback |
 
 ## Risks and scope management
 
@@ -92,6 +105,7 @@ During Phase 3 user-feedback iterations, revise scope and acceptance criteria in
 | 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
 | 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
 | 1.5.0 | 2026-10-31 | Added TASK-10 for price-change readability (period summary, cursor delta, high/low markers, observed sparklines) | User chart-readability request, specification 1.5.0 | In Progress |
+| 1.6.0 | 2026-10-31 | Added Phase 4 (TASK-11–TASK-15) for social sentiment insights and the research agent: fixture-first UI, permission gate, evaluated pipeline, guarded agent, trust audit | User trust and sentiment request, specification 1.6.0 | In Progress |
 
 ## Replacement backend contract · 1.3.0
 

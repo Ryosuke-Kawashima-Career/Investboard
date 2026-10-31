@@ -1,6 +1,6 @@
 ---
 document_type: "specification"
-version: "1.5.0"
+version: "1.6.0"
 status: "Draft"
 last_updated: "2026-10-31"
 author: "Codex"
@@ -10,7 +10,7 @@ author: "Codex"
 
 Build a mobile-friendly web application that helps people in India view Indian stock prices and discover companies worth further research using traceable public web information. Start with a clear research experience and explainable discovery signals so users can assess evidence before making their own investment decisions.
 
-Implementation: [Implementation plan](../plans/implementation_plan_indian_equity_research.md), version 1.4.0.
+Implementation: [Implementation plan](../plans/implementation_plan_indian_equity_research.md), version 1.6.0.
 
 ## User need and scope
 
@@ -20,7 +20,7 @@ Primary user: an individual investor in India who needs understandable prices an
 
 MVP assumptions: English interface, INR prices, Indian exchange-listed equities, responsive web delivery, delayed or end-of-day data acceptable when clearly labeled, and a deliberately limited company universe based on available licensed data. Users can research without registration. These are proposed product choices, not confirmed user requirements.
 
-The MVP supports research and a local watchlist. Brokerage connectivity, order execution, portfolio management, personalized recommendations, guaranteed returns, price predictions, derivatives, funds, multilingual support, and automatic trading are outside MVP scope. Additional languages and server-synced watchlists are post-MVP candidates.
+The MVP supports research and a local watchlist. Brokerage connectivity, order execution, portfolio management, personalized recommendations, guaranteed returns, price predictions, derivatives, funds, multilingual support, and automatic trading are outside MVP scope. Additional languages and server-synced watchlists are post-MVP candidates. Version 1.6.0 adds descriptive social attention and sentiment insights and an interactive research agent (REQ-11, REQ-12) to build trust; they are neither predictions nor advice, and sentiment never ranks companies.
 
 | Option | Reason for rejection |
 |---|---|
@@ -34,6 +34,7 @@ The MVP supports research and a local watchlist. Brokerage connectivity, order e
 - Browse companies using sector and evidence-based discovery filters, then inspect why a company appeared.
 - Open a company page, read recent positive and negative developments, and follow links to the original sources.
 - Save a company to a watchlist and return later to review updated information.
+- Ask the research agent what public sentiment and attention look like for a company, see the counts, sources and limits behind the answer, and open the underlying posts.
 
 ## Requirements and acceptance criteria
 
@@ -49,6 +50,8 @@ The MVP supports research and a local watchlist. Brokerage connectivity, order e
 | REQ-08 | Present research responsibly | Explain that discovery supports independent research and does not guarantee returns. Show risks and contrary evidence beside opportunities; avoid personalized buy/sell instructions. Before public launch, document the applicable data-use permissions and obtain a qualified review of the intended product's regulatory obligations. |
 | REQ-09 | Operate a reliable data pipeline | Use server-side provider adapters, validated payloads, caching, retry/backoff, and quotas. Track last successful refresh separately from source timestamps. Provider failure serves labeled cached data where available, otherwise an unavailable state. Demo fixtures are visibly marked and never presented as current quotes. |
 | REQ-10 | Protect service and user data | Keep provider credentials on the server, collect no brokerage credentials, allow clearing the local watchlist, validate inputs, restrict fetched sources, escape external text, and treat retrieved content as untrusted data. Log operational failures without credentials or personal watchlist contents. |
+| REQ-11 | Show social attention and sentiment with visible evidence quality | For a supported listing, show attention and sentiment from sources that pass the permission gate (candidates: Google Trends, X, Reddit; any other source needs a specification revision). Google Trends is shown only as relative search interest, never as sentiment. For post sources, per source and period (7 and 30 days) show items retrieved, items classified, positive/negative/neutral/mixed/unclassifiable counts, change from the prior period, retrieval time, classifier name/version and its accuracy measured on the project's labeled evaluation set, and links to the cited posts (stored text only as permitted). Withhold sentiment as "Not enough data" below a minimum sample per source-period (initial proposal 30 items from 10 distinct authors; confirm in evaluation). Deduplicate reposts, and flag unusual volume spikes and author concentration as possible manipulation. Unavailable sources are labeled unavailable and never imply neutral sentiment; fixtures are visibly synthetic. Sentiment never changes discovery ranking, is not a signal for REQ-04, and is never presented as a forecast. |
+| REQ-12 | Let users ask a research agent about price, evidence and sentiment | In a conversation on the company page, answer questions using only server-side, read-only tools over stored quote, history, evidence, signal and sentiment data. Each answer states the data period and retrieval time, links its supporting evidence, labels itself AI-generated, and says so when data is missing or below minimum sample. Decline buy/sell/hold advice, price targets, forecasts and personalized recommendations, explain why, and offer the supporting evidence instead. Treat user text and retrieved posts as untrusted data (instructions inside them are ignored); no open web access, no brokerage or account actions. Enforce per-session and daily request and cost caps with a clear message. Conversations are cleared on request and not stored server-side beyond the session; logs exclude message content and credentials. Agent or model outage leaves price, evidence and sentiment views working. |
 
 ## Proposed architecture and data contracts
 
@@ -67,7 +70,7 @@ Minimum normalized entities:
 
 Proposed read interfaces: company search; listing quote and history; company profile and paginated evidence; discovery results with filter and explanation metadata. Validate query parameters, bound page sizes, return explicit partial/unavailable states, and use a common error shape. Exact routes and storage are implementation decisions.
 
-Use deterministic extraction and signal calculation first. An optional summarizer must only consume permitted evidence, produce claim-level references, resist instructions in retrieved text, and abstain when evidence cannot support a summary. Do not require a generative model for core price and search functionality.
+Use deterministic extraction and signal calculation first. An optional summarizer must only consume permitted evidence, produce claim-level references, resist instructions in retrieved text, and abstain when evidence cannot support a summary. Do not require a generative model for core price and search functionality; the REQ-12 agent is the specified exception to the optional summarizer and must stay separable from the core views.
 
 ## Release criteria and unresolved decisions
 
@@ -88,6 +91,7 @@ Measure task success during usability review: can a participant find a company, 
 | 1.3.0 | 2026-10-31 | Reopen Phase 2 after user revert; select Yahoo chart observations for verified NSE RELIANCE; preserve all research requirements | User alternative-source request | In Progress |
 | 1.4.0 | 2026-10-31 | Phase 2 MVP backend: ten-listing NSE universe, Google News RSS evidence, price-momentum and news-coverage signals | User Phase 2 request | In Progress |
 | 1.5.0 | 2026-10-31 | Phase 3 price-change readability: period summary, cursor delta, high/low markers, 1Y line default, observed sparklines | User chart-readability request | In Progress |
+| 1.6.0 | 2026-10-31 | Added REQ-11 social attention/sentiment and REQ-12 research agent with trust, permission and evaluation gates | User trust and sentiment-analysis request | In Progress |
 
 ## Replacement backend contract · 1.3.0
 
@@ -118,3 +122,23 @@ Requests: one chart and one news request per listing per refresh, sequential wit
 ## Price-change readability · 1.5.0
 
 Goal: users grasp how a price changed, not only what it was. Derived from supplied closes only; no forecast, smoothing, indicators or interpolation. Period change = last close vs first close in the selected calendar range (1M/6M/1Y); high/low use supplied highs/lows when OHLC exists, otherwise closes. Discovery rows show a close-only sparkline of the last 1M from observed history, labeled observed (not synthetic); rows without history show none. Volume, multi-stock comparison, intraday ranges and technical indicators are out of scope until separately specified. Verification: unit tests for the summary function (partial history, single session, zero first close), chart and list browser journeys at 1440px and 360px, and the 3-second performance target.
+
+## Social sentiment and research agent · 1.6.0
+
+Goal: increase trust by showing what the public conversation looks like, how much evidence supports it, and how reliable the measurement is, and by letting users interrogate it in conversation. Descriptive only: no forecast, no recommendation, no effect on ranking. Phase 2 TASK-04 deliberately did not classify positive vs negative headlines; this version introduces classification only under the evaluation gate below.
+
+Provider assumptions, unverified at authoring and resolved by the permission gate before any live integration: Google Trends reports normalized relative search interest, not sentiment, and may lack a stable official API; X API access is paid and usage-limited with redistribution and storage restrictions; Reddit's Data API requires terms-compliant approved use with rate limits and restrictions on some commercial and AI uses. Scraping pages against provider terms is not allowed. Coverage can be thin or absent for Indian small caps and for Hindi or mixed Hindi-English posts; the English MVP marks such items unclassifiable rather than guessing.
+
+Data flow: permitted source adapters -> validation and company matching (exact ticker or alias rules; ambiguous matches dropped) -> deduplication and author/volume checks -> versioned classifier -> per-listing, per-source, per-day aggregates -> query API -> sentiment panel and agent tools. Store identifiers, URLs, timestamps, labels and only the text provider terms allow. The classifier (lexicon baseline or model) is versioned and enabled only after it is scored on a hand-labeled set of Indian-market posts (initial proposal 200 items across sources) with accuracy and a confusion matrix published in the app; the threshold for enabling is agreed with the user and recorded here before launch.
+
+Agent contract: tools are fixed and read-only (quote, history, evidence, signals, sentiment aggregate, cited items); the agent has no web access and no write tools; tool results are passed as quoted data; answers cite tool results; refusals for advice and forecasts are tested. Core views must work with the agent disabled.
+
+| Option | Reason for rejection |
+|---|---|
+| Use sentiment to rank or filter discovery | Unvalidated and easy to manipulate; conflicts with REQ-04 explainability |
+| Single sentiment score per company | Hides sample size, source mix and uncertainty |
+| Treat Google Trends as sentiment | It measures interest, not direction |
+| Scrape X or Reddit without approved access | Terms and permission risk; unstable |
+| Agent with free web browsing | Untraceable claims and prompt-injection exposure |
+
+Resolve before live integration: per-source access, cost, storage and display rights; sentiment classifier choice and enabling threshold; minimum-sample values; agent model provider and cost caps. Resolve before public launch: qualified review of whether sentiment summaries and an agent answering stock questions fall under applicable Indian investment-advice or research-analyst obligations, and approved wording. No legal conclusion is asserted here. Verification: labeled-set evaluation report, guardrail tests (advice refusal, injection, missing data), source-permission audit, mobile and desktop journeys, and the 3-second target for cached views.

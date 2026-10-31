@@ -4,6 +4,7 @@ import { money } from "./data";
 import { summarizePeriod } from "./chart-data";
 import { StockChart, describeChange } from "./StockChart";
 import { useWatchlist } from "./useWatchlist";
+import { SentimentPanel } from "./SentimentPanel";
 import {
   loadResearch,
   rangeStart,
@@ -386,6 +387,12 @@ export default function RealApp() {
                     Explain discovery signal
                   </button>
                 </section>
+                <SentimentPanel
+                  key={listing.id}
+                  listingId={listing.id}
+                  today={today}
+                  real
+                />
                 <section className="chart-panel">
                   <h2>Original disclosures</h2>
                   {!listing.evidence.some(
