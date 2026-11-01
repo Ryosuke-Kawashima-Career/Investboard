@@ -114,7 +114,9 @@ export async function loadAgentStatus(
     : null;
 }
 export type AgentAnswer = {
-  kind: "answer" | "refusal";
+  kind: "answer";
+  /** True when the server removed recommendation or forecast sentences. */
+  edited?: boolean;
   text: string;
   period?: string;
   citations: { id: string; label: string; href?: string }[];

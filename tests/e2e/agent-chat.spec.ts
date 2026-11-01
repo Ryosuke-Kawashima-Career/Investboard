@@ -15,10 +15,10 @@ test("agent preview answers with citations, declines advice and clears", async (
   const input = chat.getByRole("textbox", { name: "Ask the research agent" });
   await input.fill("Should I buy this stock?");
   await input.press("Enter");
-  await expect(chat.locator(".agent-a.refusal")).toContainText(
-    "can't give buy, sell or hold advice",
+  await expect(chat.locator(".agent-a.balanced")).toContainText(
+    "Not personalised investment advice.",
   );
-  await expect(chat.locator(".agent-a.refusal a").first()).toHaveAttribute(
+  await expect(chat.locator(".agent-a.balanced a").first()).toHaveAttribute(
     "href",
     /^https:\/\//,
   );

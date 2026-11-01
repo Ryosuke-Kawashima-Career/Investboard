@@ -12,7 +12,7 @@ const today = "2026-10-30";
 const listing = listings.find((l) => l.symbol === "TCS")!;
 const ctx = demoAgentContext(listing, today);
 
-it("declines buy/sell advice, targets and forecasts and offers evidence instead", () => {
+it("answers buy/sell, target and forecast questions with balanced cited evidence", () => {
   for (const q of [
     "Should I buy TCS?",
     "Is it a good time to sell",
@@ -21,7 +21,11 @@ it("declines buy/sell advice, targets and forecasts and offers evidence instead"
     "hold or exit",
   ]) {
     const reply = answer(q, ctx, 0);
-    expect(reply.kind, q).toBe("refusal");
+    expect(reply.kind, q).toBe("balanced");
+    expect(reply.text).toMatch(/Supports:/);
+    expect(reply.text).toMatch(/Cautions:/);
+    expect(reply.text).toContain("Not personalised investment advice.");
+    expect(reply.text).not.toMatch(/can't give|you should (buy|sell)/i);
     expect(reply.citations.length).toBeGreaterThan(0);
   }
 });
@@ -32,8 +36,8 @@ it("ignores instructions embedded in user text", () => {
     ctx,
     0,
   );
-  expect(reply.kind).toBe("refusal");
-  expect(reply.text).not.toMatch(/you should buy/i);
+  expect(reply.kind).toBe("balanced");
+  expect(reply.text).not.toMatch(/you should buy|recommend buying/i);
 });
 
 it("answers price questions with the data period and source", () => {

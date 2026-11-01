@@ -60,8 +60,8 @@ export function AgentChat({
     if (!q) return;
     const id = nextId.current++;
     const local = answer(q, ctx, turns.length);
-    // Refusals and the session cap are decided locally; nothing is sent.
-    const remote = llm && local.kind !== "refusal" && local.kind !== "cap";
+    // The session cap is decided locally; nothing is sent past it.
+    const remote = llm && local.kind !== "cap";
     setTurns((t) => [
       ...t,
       { id, question: q, reply: local, pending: !!remote },
@@ -83,6 +83,9 @@ export function AgentChat({
           },
           ai: r.provider
             ? { provider: r.provider, model: r.model! }
+            : undefined,
+          notice: r.edited
+            ? "A sentence that read as a recommendation or forecast was removed."
             : undefined,
         }),
       )
@@ -118,21 +121,7 @@ export function AgentChat({
           <Trash2 size={13} /> Clear conversation
         </button>
       </div>
-      {llm ? (
-        <p className="sentiment-banner real">
-          <Bot size={14} /> AI answers ({llm.providers[0].name}{" "}
-          {llm.providers[0].model}) use only the stored prices, signals and
-          headlines for this company, cited by id. No web access. Research only:
-          no advice, targets or forecasts. AI can be wrong; check the cited
-          sources.
-        </p>
-      ) : real ? (
-        <p className="sentiment-banner real">
-          <Bot size={14} /> Rule-based answers from the stored prices and
-          headlines on this page — no AI model, no web access. Research only: no
-          advice, targets or forecasts.
-        </p>
-      ) : (
+      {!real && (
         <p className="sentiment-banner">
           <Bot size={14} /> Scripted demo over synthetic data — answers stand in
           for AI-generated ones. Research only: no advice, targets or forecasts.
@@ -225,8 +214,7 @@ export function AgentChat({
         </button>
       </form>
       <p className="small muted">
-        {turns.length}/{MAX_QUESTIONS} questions this session · Not stored after
-        you leave the page.
+        {turns.length}/{MAX_QUESTIONS} questions
       </p>
     </section>
   );

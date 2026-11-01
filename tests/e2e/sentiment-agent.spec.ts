@@ -12,9 +12,9 @@ test("synthetic sentiment panel shows counts, states and labels", async ({
   await expect(
     panel.getByText("Synthetic fixture", { exact: false }),
   ).toBeVisible();
-  await expect(
-    panel.getByText("Source unavailable", { exact: true }),
-  ).toBeVisible();
+  await expect(panel.locator(".sentiment-unavailable")).toHaveText(
+    "Source unavailable: X. Not counted as neutral.",
+  );
   await expect(
     panel.getByText("not sentiment", { exact: false }),
   ).toBeVisible();

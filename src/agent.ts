@@ -28,7 +28,7 @@ export type AgentContext = {
 };
 export type Citation = { label: string; href?: string };
 export type AgentReply = {
-  kind: "answer" | "refusal" | "missing" | "cap" | "help";
+  kind: "answer" | "balanced" | "missing" | "cap" | "help";
   text: string;
   period?: string;
   citations: Citation[];
@@ -198,6 +198,55 @@ function evidenceAnswer(ctx: AgentContext): AgentReply {
   };
 }
 
+/** Decision, target and forecast questions: evidence on both sides, never a call. */
+function balancedAnswer(ctx: AgentContext): AgentReply {
+  const supports: string[] = [],
+    cautions: string[] = [];
+  const price = priceAnswer(ctx);
+  const from = ctx.history.at(-1)?.date;
+  if (from) {
+    const start = new Date(`${from}T00:00:00Z`);
+    start.setUTCMonth(start.getUTCMonth() - 1);
+    const s = summarizePeriod(
+      ctx.history.filter((p) => p.date >= start.toISOString().slice(0, 10)),
+    );
+    if (s && s.percent != null)
+      (s.change >= 0 ? supports : cautions).push(
+        `the 1M close moved ${s.change >= 0 ? "up" : "down"} ${Math.abs(s.percent).toFixed(2)}%`,
+      );
+  }
+  const source = ctx.sentiment.sources.find((x) => x.status === "available");
+  if (source && source.status === "available") {
+    const agg = aggregateSentiment(
+      source.items,
+      30,
+      ctx.today,
+      source.minSample,
+    );
+    const noun = ctx.sentiment.synthetic ? "posts" : "headlines";
+    if (agg.counts) {
+      if (agg.counts.positive)
+        supports.push(`${agg.counts.positive} positive ${noun} in 30 days`);
+      if (agg.counts.negative)
+        cautions.push(`${agg.counts.negative} negative ${noun} in 30 days`);
+    } else cautions.push(`too few ${noun} to judge tone`);
+  }
+  for (const e of ctx.evidence.slice(0, 6)) {
+    if (/^(positive|Worth exploring)/i.test(e.note) && supports.length < 4)
+      supports.push(`"${e.title}"`);
+    if (/^(negative|Counterpoint)/i.test(e.note) && cautions.length < 4)
+      cautions.push(`"${e.title}"`);
+  }
+  const list = (items: string[]) =>
+    items.length ? items.join("; ") : "nothing in the stored data";
+  return {
+    kind: "balanced",
+    text: `Here is the evidence on both sides. Supports: ${list(supports)}. Cautions: ${list(cautions)}. Check next: open the cited sources and the latest filings. Not personalised investment advice.`,
+    period: price.period,
+    citations: evidenceCitations(ctx),
+  };
+}
+
 export function answer(
   question: string,
   ctx: AgentContext,
@@ -209,12 +258,7 @@ export function answer(
       text: `This session's limit of ${MAX_QUESTIONS} questions is reached. Clear the conversation to start again.`,
       citations: [],
     };
-  if (advice.test(question))
-    return {
-      kind: "refusal",
-      text: "I can't give buy, sell or hold advice, price targets or forecasts — I'm not a licensed adviser and the data here can't support them. I can show what the evidence says instead:",
-      citations: evidenceCitations(ctx),
-    };
+  if (advice.test(question)) return balancedAnswer(ctx);
   if (intents.price.test(question)) return priceAnswer(ctx);
   if (intents.sentiment.test(question)) return sentimentAnswer(ctx);
   if (intents.evidence.test(question)) return evidenceAnswer(ctx);

@@ -80,7 +80,7 @@ function Evidence({ e }: { e: RealListing["evidence"][number] }) {
         {news ? "Open article via Google News" : "Open original disclosure"}{" "}
         <ExternalLink size={14} />
       </a>
-      <p className="evidence-disclaimer">{e.limitations}</p>
+      {!news && <p className="evidence-disclaimer">{e.limitations}</p>}
     </article>
   );
 }
@@ -423,8 +423,7 @@ export default function RealApp() {
             <div className="demo-notice">
               <Info size={14} />
               <span>
-                Local research trial · {listings.length} verified NSE listing(s)
-                · End-of-day observations, not a live feed.
+                {listings.length} verified NSE listings · End-of-day prices
               </span>
               <button onClick={() => setMethod(true)}>
                 About this data <ArrowUpRight size={13} />
@@ -512,13 +511,9 @@ export default function RealApp() {
                       </span>
                     </div>
                     <p className="muted small">
-                      Source: {listing.quote.source} ·{" "}
-                      {listing.quote.cacheStatus} · Freshness:{" "}
-                      {listing.quote.freshness}. No verified exchange calendar.
-                      <br />
-                      Retrieved: {listing.quote.fetchedTimestamp || "Never"} ·
-                      Last attempt:{" "}
-                      {result?.meta.lastAttemptedRefresh || "Never"}
+                      {listing.quote.source} · Retrieved{" "}
+                      {listing.quote.fetchedTimestamp?.slice(0, 10) || "never"}
+                      {listing.quote.freshness === "stale" ? " · Stale" : ""}
                     </p>
                     <div className="chart-toolbar">
                       <h3>Price history</h3>
@@ -546,15 +541,10 @@ export default function RealApp() {
                       rangeTo={today}
                     />
                     <p className="small muted coverage-note">
-                      Requested {from} – {today}. Available{" "}
-                      {listing.history[0]?.date || "none"} –{" "}
-                      {listing.history.at(-1)?.date || "none"} (
-                      {listing.history.length} observed sessions).{" "}
+                      {listing.history.length} observed sessions
                       {listing.history[0]?.date > from
-                        ? "Partial history for this range."
-                        : "Coverage uncertain without an exchange calendar."}{" "}
-                      No gap filling. Yahoo prices are split-adjusted, not
-                      dividend-adjusted.
+                        ? " · Partial history for this range"
+                        : ""}
                     </p>
                   </section>
                   <section className="panel fundamentals">
@@ -578,10 +568,6 @@ export default function RealApp() {
                         <dd>{percentText(momentum(listing)?.value ?? null)}</dd>
                       </div>
                     </dl>
-                    <p className="small muted">
-                      Fundamentals are not yet sourced, so they are shown as
-                      unavailable rather than estimated.
-                    </p>
                     <button
                       className="source-link text-button"
                       onClick={() => setMethod(true)}
@@ -631,7 +617,6 @@ export default function RealApp() {
                 <div className="section-top evidence-heading">
                   <div>
                     <h2>Original disclosures</h2>
-                    <p>Company filings, linked to the original document.</p>
                   </div>
                   <span className="subtle-badge">
                     {disclosures(listing).length} verified
@@ -652,12 +637,8 @@ export default function RealApp() {
                   <div>
                     <h2>Recent news headlines</h2>
                     <p>
-                      Google News search, last 30 days · Retrieved{" "}
-                      {listing.newsRetrievedAt || "never"}
-                      {listing.newsError
-                        ? " · Latest news refresh failed; older headlines may be shown"
-                        : ""}
-                      . Tone labels come from word lists, not the articles.
+                      Google News · last 30 days
+                      {listing.newsError ? " · latest refresh failed" : ""}
                     </p>
                   </div>
                   <span className="subtle-badge">
@@ -1045,6 +1026,21 @@ export default function RealApp() {
           published within 30 calendar days in Asia/Kolkata, including today.
           Unknown or future dates never qualify. Companies are alphabetical,
           with no forecast or ranking.
+        </p>
+        <h3>Headline tone and the research agent</h3>
+        <p>
+          Headline tone classifies the wording of company-matched Google News
+          headlines with word lists (headline-lexicon-v1). It describes
+          headlines, not public opinion, is not a forecast and never affects
+          discovery ranking. Headlines are not checked against the articles.
+        </p>
+        <p>
+          The research agent answers only from the stored prices, signals and
+          headlines for the open company, cites them by id, and has no web
+          access. When an AI provider key is configured, answers are
+          AI-generated and can be wrong; otherwise they are rule-based. It gives
+          no advice, targets or forecasts, and conversations are not stored
+          after you leave the page.
         </p>
         <h3>Sources and limits</h3>
         <p>

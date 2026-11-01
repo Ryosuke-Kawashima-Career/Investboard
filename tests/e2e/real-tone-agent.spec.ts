@@ -70,10 +70,10 @@ test("real headline tone and rule-based agent use stored data only", async ({
   ).toBeVisible();
   await expect(panel.locator(".sentiment-legend")).toContainText("positive 4");
   await expect(panel.locator(".sentiment-legend")).toContainText("negative 4");
-  await expect(
-    panel.getByText("Source unavailable", { exact: true }),
-  ).toHaveCount(3);
-  await panel.getByText(/How accurate is this\?/).click();
+  await expect(panel.locator(".sentiment-unavailable")).toHaveText(
+    "Source unavailable: Reddit · X · Google Trends. Not counted as neutral.",
+  );
+  await panel.getByText(/headline-lexicon-v1 · \d+% accuracy/).click();
   await expect(panel.locator(".eval-matrix")).toBeVisible();
   const chat = page.locator(".agent-chat");
   await chat
@@ -86,7 +86,9 @@ test("real headline tone and rule-based agent use stored data only", async ({
   const input = chat.getByRole("textbox", { name: "Ask the research agent" });
   await input.fill("should I buy reliance?");
   await input.press("Enter");
-  await expect(chat.locator(".agent-a.refusal")).toBeVisible();
+  await expect(chat.locator(".agent-a.balanced")).toContainText(
+    "Not personalised investment advice.",
+  );
   await expect(page.locator("body")).not.toContainText("synthetic");
   expect(
     await page.evaluate(

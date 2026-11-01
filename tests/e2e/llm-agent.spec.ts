@@ -67,7 +67,7 @@ test("LLM agent shows cited AI answers and falls back to rules on failure", asyn
     .getByRole("button", { name: "Reliance Industries Limited", exact: true })
     .click();
   const chat = page.locator(".agent-chat");
-  await expect(chat.getByText(/AI answers \(anthropic/)).toBeVisible();
+  await expect(chat.getByText("RESEARCH AGENT · AI")).toBeVisible();
   await chat.getByRole("button", { name: "How has the price moved?" }).click();
   await expect(
     chat.getByText("AI-generated · anthropic claude-opus-5-5"),
@@ -84,7 +84,11 @@ test("LLM agent shows cited AI answers and falls back to rules on failure", asyn
   ).toBeVisible();
   await input.fill("Should I buy?");
   await input.press("Enter");
-  await expect(chat.locator(".agent-a.refusal")).toBeVisible();
-  expect(calls).toBe(2);
+  // Advice-style questions now go to the model; here it is down, so the
+  // balanced rule-based answer is shown with the fallback notice.
+  await expect(chat.locator(".agent-a.balanced")).toContainText(
+    "Not personalised investment advice.",
+  );
+  expect(calls).toBe(3);
   await expect(page.locator("body")).not.toContainText("synthetic");
 });

@@ -190,8 +190,8 @@ function EvaluationDetails({ evaluation }: { evaluation: ToneEvaluation }) {
   return (
     <details className="sentiment-eval">
       <summary>
-        How accurate is this? {(evaluation.accuracy * 100).toFixed(0)}% on{" "}
-        {evaluation.n} labeled headlines
+        headline-lexicon-v1 · {(evaluation.accuracy * 100).toFixed(0)}% accuracy
+        on {evaluation.n} labeled headlines
       </summary>
       <p className="small muted">
         Labels were assigned by the AI assistant and the word lists were written
@@ -243,6 +243,9 @@ export function SentimentPanel({
   const real = !bundle.synthetic;
   const accuracy = bundle.classifier.accuracy;
   const withheld = real && (accuracy == null || accuracy < threshold);
+  const unavailable = bundle.sources
+    .filter((s) => s.status === "unavailable")
+    .map((s) => s.name);
   return (
     <section className="sentiment-panel" aria-labelledby="sentiment-title">
       <div className="sentiment-head">
@@ -270,13 +273,7 @@ export function SentimentPanel({
           </div>
         )}
       </div>
-      {real ? (
-        <p className="sentiment-banner real">
-          <Newspaper size={14} /> Tone of company-matched Google News headlines,
-          classified by word lists. It describes headlines, not public opinion,
-          is not a forecast, and never affects discovery ranking.
-        </p>
-      ) : (
+      {!real && (
         <p className="sentiment-banner">
           <FlaskConical size={14} /> Synthetic fixture — invented posts and
           counts for interface review. Not real sentiment, not a forecast, and
@@ -292,26 +289,36 @@ export function SentimentPanel({
         </div>
       ) : (
         <div className="sentiment-grid">
-          {bundle.sources.map((_, i) => (
-            <SourceCard
-              key={i}
-              bundle={bundle}
-              index={i}
-              days={days}
-              today={today}
-            />
-          ))}
+          {bundle.sources.map((s, i) =>
+            s.status === "unavailable" ? null : (
+              <SourceCard
+                key={i}
+                bundle={bundle}
+                index={i}
+                days={days}
+                today={today}
+              />
+            ),
+          )}
           {bundle.trends && <TrendsCard trends={bundle.trends} />}
         </div>
       )}
-      <p className="small muted">
-        Classifier {bundle.classifier.name} {bundle.classifier.version} ·
-        Accuracy:{" "}
-        {accuracy == null
-          ? "not yet measured on the labeled evaluation set"
-          : `${(accuracy * 100).toFixed(0)}% (in-sample)`}
-      </p>
-      {evaluation && <EvaluationDetails evaluation={evaluation} />}
+      {unavailable.length > 0 && (
+        <p className="sentiment-unavailable">
+          Source unavailable: {unavailable.join(" · ")}. Not counted as neutral.
+        </p>
+      )}
+      {evaluation ? (
+        <EvaluationDetails evaluation={evaluation} />
+      ) : (
+        <p className="small muted">
+          Classifier {bundle.classifier.name} {bundle.classifier.version} ·
+          Accuracy:{" "}
+          {accuracy == null
+            ? "not yet measured on the labeled evaluation set"
+            : `${(accuracy * 100).toFixed(0)}% (in-sample)`}
+        </p>
+      )}
     </section>
   );
 }

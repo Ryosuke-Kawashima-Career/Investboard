@@ -1974,3 +1974,5 @@ dd {
 .agent-notice { font-size:11px; color:#8a5300; background:rgba(255,149,0,.08); border-radius:var(--macos-radius-inner); padding:4px 8px; }
 .agent-a.pending p { display:flex; align-items:center; gap:8px; color:var(--macos-text-secondary); }
 .loading-spinner.small { width:12px; height:12px; border-width:2px; }
+.sentiment-unavailable { margin:12px 0 0; font-size:11px; color:var(--macos-text-secondary); }
+.agent-a.balanced { border-color:rgba(0,122,255,.2); }

@@ -65,16 +65,23 @@ it("lists available providers in order, honours a pin and validates models", () 
   expect(JSON.stringify(agentStatus(keys))).not.toContain("a-key");
 });
 
-it("refuses advice before calling any model", async () => {
-  const call = vi.fn();
+it("sends advice-style questions to the model with balanced-answer rules", async () => {
+  let seen: LlmRequest | undefined;
+  const call = vi.fn(async (req: LlmRequest) => {
+    seen = req;
+    return "Supports: the close rose [P1M]. Cautions: one headline was negative [H1]. Not personalised investment advice.";
+  });
   const r = await ask(
     seeded(),
     { companyId: manifest.companyId, question: "Should I buy Reliance?" },
     call,
   );
-  expect(r.status).toBe(200);
-  expect(r.body.data.kind).toBe("refusal");
-  expect(call).not.toHaveBeenCalled();
+  expect(call).toHaveBeenCalledOnce();
+  expect(seen!.system).toMatch(/balanced/i);
+  expect(seen!.user).toMatch(/decision or forecast question/i);
+  expect(r.body.data.kind).toBe("answer");
+  expect(r.body.data.text).not.toMatch(/can't give/i);
+  expect(r.body.data.edited).toBe(false);
 });
 
 it("quotes data as untrusted, maps known citations and drops unknown ids", async () => {
@@ -104,14 +111,16 @@ it("quotes data as untrusted, maps known citations and drops unknown ids", async
   });
 });
 
-it("replaces answers that slip into advice or forecasts", async () => {
+it("removes sentences that still read as a recommendation, target or forecast", async () => {
   const r = await ask(
     seeded(),
     { companyId: manifest.companyId, question: "Summarise the news" },
     async () =>
-      "Headlines are strong [H1], so you should buy before it will rise.",
+      "Headlines were mostly positive [H1]. You should buy before it will rise. A target price of 3000 is fair.",
   );
-  expect(r.body.data.kind).toBe("refusal");
+  expect(r.body.data.kind).toBe("answer");
+  expect(r.body.data.text).toBe("Headlines were mostly positive [H1].");
+  expect(r.body.data.edited).toBe(true);
 });
 
 it("falls back to the next provider and reports total failure", async () => {
@@ -191,4 +200,17 @@ it("accepts grouped citations like [H1, P1M] and drops unknown ids inside them",
   expect(r.body.data.citations.map((c: any) => c.id)).toEqual(["H1", "P1M"]);
   expect(r.body.data.text).toContain("[H1, P1M]");
   expect(r.body.data.text).not.toContain("Z9");
+});
+
+it("keeps neutral 'will' sentences that are not price forecasts", async () => {
+  const r = await ask(
+    seeded(),
+    { companyId: manifest.companyId, question: "What to watch?" },
+    async () =>
+      "Check whether margins will fall next quarter [H1]. The shares will likely rise from here.",
+  );
+  expect(r.body.data.text).toBe(
+    "Check whether margins will fall next quarter [H1].",
+  );
+  expect(r.body.data.edited).toBe(true);
 });
